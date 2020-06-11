@@ -1,4 +1,3 @@
 #!/bin/bash
 
-kill -9 $(pgrep -f 'server.js'); nohup npm start &> log.txt &
-
+sudo systemctl restart homebackend.service
