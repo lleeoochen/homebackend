@@ -9,12 +9,14 @@ const server = require('http').Server(app);
 const io = require('socket.io')(server);
 const hammer = require('./hammer');
 const CONST = require('./const');
+require('dotenv').config()
 
 app.use(function(req, res, next) {
 	res.header("Access-Control-Allow-Origin", "https://weitungchen.com");
+	res.header("Access-Control-Allow-Origin", process.env.ALLOWED_ORIGIN);
 	res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
 	res.header("Access-Control-Allow-Credentials", "true");
-	// req.header("Access-Control-Allow-Credentials", "true");
+	res.header("Set-Cookie", "HttpOnly;Secure;SameSite=Strict");
 	next();
 });
 
@@ -43,20 +45,33 @@ setInterval(function() {
 
 
 // Create client session
-app.post('/login', (req, res) => {
-	// Check request body
-	let uid = req.body.uid;
-	if (uid == undefined) return field_error(req, res, uid);
+app.post('/login', async (req, res) => {
 
-	// Check query fields
-	let session_id = hammer.encrypt({
-		ip: req.connection.remoteAddress,
-		uid: uid
+	// Check body fields
+	let auth_token = req.body.auth_token;
+	if (auth_token == undefined) return field_error(req, res, "auth_token");
+
+	admin.auth().verifyIdToken(auth_token).then(async function(auth_user) {
+		// Get session id
+		let session_id = hammer.encrypt({
+			ip: req.connection.remoteAddress,
+			uid: auth_user.uid
+		});
+
+
+
+		// Update database
+		let changes = {
+			email: auth_user.email,
+			photo: auth_user.picture,
+			name: auth_user.name
+		};
+		await db.collection(CONST.DB.USERS).doc(auth_user.uid).set(changes, { merge: true });
+
+		// Send session_id to client
+		res.cookie('session_id', session_id, { maxAge: 2592000000, httpOnly: true });
+		res.json('success');
 	});
-
-	// Send session_id to client
-	res.cookie('session_id', session_id, { maxAge: 2592000000, httpOnly: true });
-	res.json('success');
 });
 
 
@@ -94,7 +109,7 @@ app.get('/get_user', async (req, res) => {
 
 	// Check query fields
 	let id = req.query.id;
-	if (id == undefined) return field_error(req, res, id);
+	if (id == undefined) return field_error(req, res, "id");
 
 	// Query database
 	let snap = await db.collection(CONST.DB.USERS)
@@ -119,7 +134,7 @@ app.get('/get_match', async (req, res) => {
 
 	// Check query fields
 	let id = req.query.id;
-	if (id == undefined) return field_error(req, res, id);
+	if (id == undefined) return field_error(req, res, "id");
 
 	// Query database
 	let data = await db.collection(CONST.DB.MATCHES).doc(id).get();
@@ -142,7 +157,7 @@ app.get('/get_matches', async (req, res) => {
 
 	// Check query fields
 	let ids = req.query.ids;
-	if (ids == undefined) return field_error(req, res, id);
+	if (ids == undefined) return field_error(req, res, "id");
 	ids = JSON.parse(ids);
 
 	// Query database
@@ -199,10 +214,10 @@ app.post('/create_match', async (req, res) => {
 
 	// Check query fields
 	let theme = req.body.theme;
-	if (theme == undefined) return field_error(req, res, theme);
+	if (theme == undefined) return field_error(req, res, "theme");
 
 	let time = req.body.time;
-	if (time == undefined) return field_error(req, res, time);
+	if (time == undefined) return field_error(req, res, "time");
 
 	// Query database
 	db.collection(CONST.DB.MATCHES).add({
@@ -250,16 +265,16 @@ app.post('/update_chessboard', async (req, res) => {
 
 	// Check query fields
 	let match_id = req.body.match_id;
-	if (match_id == undefined) return field_error(req, res, match_id);
+	if (match_id == undefined) return field_error(req, res, "match_id");
 
 	let move = req.body.move;
-	if (move == undefined) return field_error(req, res, move);
+	if (move == undefined) return field_error(req, res, "move");
 
 	let black_timer = req.body.black_timer;
-	if (black_timer == undefined) return field_error(req, res, black_timer);
+	if (black_timer == undefined) return field_error(req, res, "black_timer");
 
 	let white_timer = req.body.white_timer;
-	if (white_timer == undefined) return field_error(req, res, white_timer);
+	if (white_timer == undefined) return field_error(req, res, "white_timer");
 
 	// Check update privilege
 	let validation = await validate_match(session, match_id);
@@ -290,16 +305,16 @@ app.post('/update_timer', async (req, res) => {
 
 	// Check query fields
 	let match_id = req.body.match_id;
-	if (match_id == undefined) return field_error(req, res, match_id);
+	if (match_id == undefined) return field_error(req, res, "match_id");
 
 	let black_timer = req.body.black_timer;
-	if (black_timer == undefined) return field_error(req, res, black_timer);
+	if (black_timer == undefined) return field_error(req, res, "black_timer");
 
 	let white_timer = req.body.white_timer;
-	if (white_timer == undefined) return field_error(req, res, white_timer);
+	if (white_timer == undefined) return field_error(req, res, "white_timer");
 
 	let message = req.body.message;
-	if (message == undefined) return field_error(req, res, message);
+	if (message == undefined) return field_error(req, res, "message");
 
 	// Check update privilege
 	let validation = await validate_match(session, match_id);
@@ -329,10 +344,10 @@ app.post('/checkmate', async (req, res) => {
 
 	// Check query fields
 	let match_id = req.body.match_id;
-	if (match_id == undefined) return field_error(req, res, match_id);
+	if (match_id == undefined) return field_error(req, res, "match_id");
 
 	let winner = req.body.winner;
-	if (winner == undefined) return field_error(req, res, winner);
+	if (winner == undefined) return field_error(req, res, "winner");
 
 	// Check update privilege
 	let validation = await validate_match(session, match_id);
@@ -362,7 +377,7 @@ app.post('/stalemate', async (req, res) => {
 
 	// Check query fields
 	let match_id = req.body.match_id;
-	if (match_id == undefined) return field_error(req, res, match_id);
+	if (match_id == undefined) return field_error(req, res, "match_id");
 
 	// Check update privilege
 	let validation = await validate_match(session, match_id);
@@ -391,10 +406,10 @@ app.post('/draw', async (req, res) => {
 
 	// Check query fields
 	let match_id = req.body.match_id;
-	if (match_id == undefined) return field_error(req, res, match_id);
+	if (match_id == undefined) return field_error(req, res, "match_id");
 
 	let message = req.body.message;
-	if (message == undefined) return field_error(req, res, message);
+	if (message == undefined) return field_error(req, res, "message");
 
 	// Check update privilege
 	let validation = await validate_match(session, match_id);
@@ -425,13 +440,13 @@ app.post('/timesup', async (req, res) => {
 
 	// Check query fields
 	let match_id = req.body.match_id;
-	if (match_id == undefined) return field_error(req, res, match_id);
+	if (match_id == undefined) return field_error(req, res, "match_id");
 
 	let winner = req.body.winner;
-	if (winner == undefined) return field_error(req, res, winner);
+	if (winner == undefined) return field_error(req, res, "winner");
 
 	let message = req.body.message;
-	if (message == undefined) return field_error(req, res, message);
+	if (message == undefined) return field_error(req, res, "message");
 
 	// Check update privilege
 	let validation = await validate_match(session, match_id);
@@ -463,13 +478,13 @@ app.post('/resign', async (req, res) => {
 
 	// Check query fields
 	let match_id = req.body.match_id;
-	if (match_id == undefined) return field_error(req, res, match_id);
+	if (match_id == undefined) return field_error(req, res, "match_id");
 
 	let winner = req.body.winner;
-	if (winner == undefined) return field_error(req, res, winner);
+	if (winner == undefined) return field_error(req, res, "winner");
 
 	let message = req.body.message;
-	if (message == undefined) return field_error(req, res, message);
+	if (message == undefined) return field_error(req, res, "message");
 
 	// Check update privilege
 	let validation = await validate_match(session, match_id);
@@ -501,13 +516,13 @@ app.post('/undo', async (req, res) => {
 
 	// Check query fields
 	let match_id = req.body.match_id;
-	if (match_id == undefined) return field_error(req, res, match_id);
+	if (match_id == undefined) return field_error(req, res, "match_id");
 
 	let undo_team = req.body.undo_team;
-	if (undo_team == undefined) return field_error(req, res, undo_team);
+	if (undo_team == undefined) return field_error(req, res, "undo_team");
 
 	let message = req.body.message;
-	if (message == undefined) return field_error(req, res, message);
+	if (message == undefined) return field_error(req, res, "message");
 
 	// Check update privilege
 	let validation = await validate_match(session, match_id);
@@ -547,10 +562,10 @@ app.post('/cancel_undo', async (req, res) => {
 
 	// Check query fields
 	let match_id = req.body.match_id;
-	if (match_id == undefined) return field_error(req, res, match_id);
+	if (match_id == undefined) return field_error(req, res, "match_id");
 
 	let undo_team = req.body.undo_team;
-	if (undo_team == undefined) return field_error(req, res, undo_team);
+	if (undo_team == undefined) return field_error(req, res, "undo_team");
 
 	// Check update privilege
 	let validation = await validate_match(session, match_id);
@@ -580,10 +595,10 @@ app.post('/cancel_draw', async (req, res) => {
 
 	// Check query fields
 	let match_id = req.body.match_id;
-	if (match_id == undefined) return field_error(req, res, match_id);
+	if (match_id == undefined) return field_error(req, res, "match_id");
 
 	let draw_team = req.body.draw_team;
-	if (draw_team == undefined) return field_error(req, res, draw_team);
+	if (draw_team == undefined) return field_error(req, res, "draw_team");
 
 	// Check update privilege
 	let validation = await validate_match(session, match_id);
@@ -613,10 +628,10 @@ app.post('/register_opponent', async (req, res) => {
 
 	// Check query fields
 	let match_id = req.body.match_id;
-	if (match_id == undefined) return field_error(req, res, match_id);
+	if (match_id == undefined) return field_error(req, res, "match_id");
 
 	let white = req.body.white;
-	if (white == undefined) return field_error(req, res, white);
+	if (white == undefined) return field_error(req, res, "white");
 
 	// Check update privilege
 	let validation = await validate_match(session, match_id);
@@ -646,10 +661,10 @@ app.post('/message', async (req, res) => {
 
 	// Check query fields
 	let match_id = req.body.match_id;
-	if (match_id == undefined) return field_error(req, res, match_id);
+	if (match_id == undefined) return field_error(req, res, "match_id");
 
 	let message = req.body.message;
-	if (message == undefined) return field_error(req, res, message);
+	if (message == undefined) return field_error(req, res, "message");
 
 	// Check update privilege
 	let validation = await validate_match(session, match_id);
@@ -677,10 +692,10 @@ app.post('/change_theme', async (req, res) => {
 
 	// Check query fields
 	let match_id = req.body.match_id;
-	if (match_id == undefined) return field_error(req, res, match_id);
+	if (match_id == undefined) return field_error(req, res, "match_id");
 
 	let theme = req.body.theme;
-	if (theme == undefined) return field_error(req, res, theme);
+	if (theme == undefined) return field_error(req, res, "theme");
 
 	// Check update privilege
 	let validation = await validate_match(session, match_id);
@@ -705,10 +720,10 @@ app.post('/ask_undo', async (req, res) => {
 
 	// Check query fields
 	let match_id = req.body.match_id;
-	if (match_id == undefined) return field_error(req, res, match_id);
+	if (match_id == undefined) return field_error(req, res, "match_id");
 
 	let undo_team = req.body.undo_team;
-	if (undo_team == undefined) return field_error(req, res, undo_team);
+	if (undo_team == undefined) return field_error(req, res, "undo_team");
 
 	// Check update privilege
 	let validation = await validate_match(session, match_id);
@@ -738,10 +753,10 @@ app.post('/ask_draw', async (req, res) => {
 
 	// Check query fields
 	let match_id = req.body.match_id;
-	if (match_id == undefined) return field_error(req, res, match_id);
+	if (match_id == undefined) return field_error(req, res, "match_id");
 
 	let draw_team = req.body.draw_team;
-	if (draw_team == undefined) return field_error(req, res, draw_team);
+	if (draw_team == undefined) return field_error(req, res, "draw_team");
 
 	// Check update privilege
 	let validation = await validate_match(session, match_id);
