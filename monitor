@@ -1,0 +1,48 @@
+#! /bin/bash
+
+function monitor_cpu {
+	# Setting cpu alert level and getting cpu usage
+	local cpu_max=90
+
+	# This is some good post I must say: https://stackoverflow.com/a/9229580/8443192
+	local cpu_usage=$(ps aux | awk '$3 ~ /[0-9].[0-9]/ {sum += $3} END {print int(sum)}')
+
+	# CPU status (first 10 entries)
+	local cpu_status=$(ps aux k -pcpu | sed '1,11!d')
+
+	# Script directory
+	local dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+	# Log process status before restarting
+	echo
+	echo $(date)
+	echo "CPU Usage: ${cpu_usage}%"
+	echo
+	echo "$cpu_status"
+	echo
+}
+
+function monitor_memory {
+	# Setting mem alert level and getting mem usage
+	local mem_max=90
+
+	# This is some good post I must say: https://stackoverflow.com/a/9229580/8443192
+	local mem_usage=$(ps aux | awk '$4 ~ /[0-9].[0-9]/ {sum += $4} END {print int(sum)}')
+
+	# CPU status (first 10 entries)
+	local mem_status=$(ps aux k -rss | sed '1,11!d')
+
+	# Script directory
+	local dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+	# Log process status before restarting
+	echo
+	echo $(date)
+	echo "Memory Usage: ${mem_usage}%"
+	echo
+	echo "$mem_status"
+	echo 
+}
+
+monitor_cpu
+monitor_memory
