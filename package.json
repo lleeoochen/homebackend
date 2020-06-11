@@ -4,8 +4,6 @@
 	"description": "",
 	"main": "server.js",
 	"scripts": {
-		"deploy": "nohup npm start 2> log.txt &",
-		"clean": "kill -9 $(pgrep -f 'server.js')",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"keywords": [],
