@@ -55,7 +55,14 @@ app.post('/login', (req, res) => {
 	});
 
 	// Send session_id to client
-	res.send({ session_id: session_id });
+	res.cookie('session_id', session_id, { maxAge: 2592000000, httpOnly: true });
+	res.json('success');
+});
+
+
+// Delete client session
+app.post('/logout', (req, res) => {
+	res.clearCookie('session_id').json('success');
 });
 
 
@@ -821,10 +828,12 @@ io.use(function(socket, next) {
 
 function get_cookies(request) {
 	let cookies = {};
-	request.headers && request.headers.cookie && request.headers.cookie.split(';').forEach(function(cookie) {
-		let parts = cookie.match(/(.*?)=(.*)$/)
-		cookies[ parts[1].trim() ] = (parts[2] || '').trim();
-	});
+	if (request.headers && request.headers.cookie) {
+		decodeURIComponent(request.headers.cookie).split(';').forEach(function(cookie) {
+			let parts = cookie.match(/(.*?)=(.*)$/)
+			cookies[ parts[1].trim() ] = (parts[2] || '').trim();
+		});
+	}
 	return cookies;
 }
 
