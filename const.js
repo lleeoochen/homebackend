@@ -37,5 +37,5 @@ module.exports = Object.freeze({
 	MAX_TIME: 60 * 60, // 1 Hour Max (Infinite time otherwise)
 	MAX_STAT: 42, // treat king as 3 score
 
-	CACHE_EXPIRE_TIME: 60 * 1000 // in milliseconds
+	CACHE_EXPIRE_TIME: 5 * 60 * 1000 // in milliseconds
 });
