@@ -845,8 +845,9 @@ function get_cookies(request) {
 	let cookies = {};
 	if (request.headers && request.headers.cookie) {
 		decodeURIComponent(request.headers.cookie).split(';').forEach(function(cookie) {
-			let parts = cookie.match(/(.*?)=(.*)$/)
-			cookies[ parts[1].trim() ] = (parts[2] || '').trim();
+			let parts = cookie.match(/(.*?)=(.*)$/);
+			if (parts)
+				cookies[ parts[1].trim() ] = (parts[2] || '').trim();
 		});
 	}
 	return cookies;
