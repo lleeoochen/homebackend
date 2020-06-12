@@ -12,8 +12,7 @@ const CONST = require('./const');
 require('dotenv').config()
 
 app.use(function(req, res, next) {
-	res.header("Access-Control-Allow-Origin", "https://weitungchen.com");
-	res.header("Access-Control-Allow-Origin", process.env.ALLOWED_ORIGIN);
+	res.header("Access-Control-Allow-Origin", process.env.ALLOWED_ORIGIN || "https://weitungchen.com");
 	res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
 	res.header("Access-Control-Allow-Credentials", "true");
 	res.header("Set-Cookie", "HttpOnly;Secure;SameSite=Strict");
