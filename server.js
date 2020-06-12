@@ -459,7 +459,7 @@ app.post('/timesup', async (req, res) => {
 
 	// Update database
 	let changes = {
-		moves: match.move,
+		moves: match.moves,
 		chat: match.chat,
 		updated: new Date().getTime()
 	};
