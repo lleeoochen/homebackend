@@ -34,6 +34,13 @@ module.exports = Object.freeze({
 		None:"N"
 	},
 
+	HTTP: {
+		OKAY: 200,
+		BAD_REQUEST: 400,
+		UNAUTHORIZED: 401,
+		NOT_FOUND: 404,
+	},
+
 	MAX_TIME: 60 * 60, // 1 Hour Max (Infinite time otherwise)
 	MAX_STAT: 42, // treat king as 3 score
 
