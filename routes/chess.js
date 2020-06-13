@@ -1,29 +1,21 @@
-const CONST = require('../const');
+const CONST = require('../helper/const');
+const UTIL = require('../helper/util');
 const express = require('express');
 const router = express.Router();
-const util = require('../util');
 
-module.exports = function(admin, db, io) {
+module.exports = function(admin, db, io, validate_session) {
+
+	// Validate session
+	router.use(validate_session);
 
 	// Matches cache
 	var matches_cache = {};
 
-
 	// Periodically clean cache
 	setInterval(function() {
 		cleanCache();
-	}, CONST.CACHE_EXPIRE_TIME);
-
-
-
-	// Validate session
-	router.use((req, res, next) => {
-		req.session = util.get_session(req);
-		console.log(req.session);
-		if (req.session == undefined)
-			return util.session_error(req, res);
-		next();
-	});
+	},
+	CONST.CACHE_EXPIRE_TIME);
 
 
 	// =========================================================================================
@@ -46,9 +38,8 @@ module.exports = function(admin, db, io) {
 		});
 	});
 
-
 	// Get user
-	router.get('/get_user', util.fields('id'), async (req, res) => {
+	router.get('/get_user', UTIL.fields('id'), async (req, res) => {
 		let id = req.fields.id;
 
 		// Query database
@@ -65,13 +56,11 @@ module.exports = function(admin, db, io) {
 		});
 	});
 
-
 	// Get cache
 	router.get('/get_cache', async (req, res) => {
 		console.log(matches_cache);
 		return res.json('success');
 	});
-
 
 
 	// =========================================================================================
@@ -81,7 +70,7 @@ module.exports = function(admin, db, io) {
 
 
 	// Get match
-	router.get('/get_match', util.fields('id'), async (req, res) => {
+	router.get('/get_match', UTIL.fields('id'), async (req, res) => {
 		let id = req.fields.id;
 
 		// Query database
@@ -96,9 +85,8 @@ module.exports = function(admin, db, io) {
 		matches_cache[id] = data;
 	});
 
-
 	// Get matches
-	router.get('/get_matches', util.fields('ids'), async (req, res) => {
+	router.get('/get_matches', UTIL.fields('ids'), async (req, res) => {
 		let ids = JSON.parse(req.fields.ids);
 
 		// Query database
@@ -146,9 +134,8 @@ module.exports = function(admin, db, io) {
 		}
 	});
 
-
 	// Create new match
-	router.post('/create_match', util.fields('theme', 'time'), async (req, res) => {
+	router.post('/create_match', UTIL.fields('theme', 'time'), async (req, res) => {
 		let theme = req.fields.theme;
 		let time = req.fields.time;
 
@@ -168,7 +155,6 @@ module.exports = function(admin, db, io) {
 			white_draw: CONST.REQUEST.NONE,
 		})
 		.then(async ref => {
-			console.log(ref);
 			await db.collection(CONST.DB.USERS).doc(req.session.uid).set({
 				matches: admin.firestore.FieldValue.arrayUnion(ref.id)
 			}, { merge: true });
@@ -185,7 +171,7 @@ module.exports = function(admin, db, io) {
 
 
 	// Update chessboard
-	router.post('/match/update_chessboard', util.fields('match_id', 'move', 'black_timer', 'white_timer'), async (req, res) => {
+	router.post('/match/update_chessboard', UTIL.fields('match_id', 'move', 'black_timer', 'white_timer'), async (req, res) => {
 		let match_id = req.fields.match_id;
 		let move = req.fields.move;
 		let black_timer = req.fields.black_timer;
@@ -193,7 +179,7 @@ module.exports = function(admin, db, io) {
 
 		// Check update privilege
 		let validation = await validate_match(req.session, match_id);
-		if (!validation.success) return util.error(req, res, validation.data);
+		if (!validation.success) return UTIL.error(req, res, validation.data);
 
 		let match = validation.data;
 		match.moves.push(move);
@@ -211,9 +197,8 @@ module.exports = function(admin, db, io) {
 		res.json('success');
 	});
 
-
 	// Update timer
-	router.post('/match/update_timer', util.fields('match_id', 'black_timer', 'white_timer', 'message'), async (req, res) => {
+	router.post('/match/update_timer', UTIL.fields('match_id', 'black_timer', 'white_timer', 'message'), async (req, res) => {
 		let match_id = req.fields.match_id;
 		let black_timer = req.fields.black_timer;
 		let white_timer = req.fields.white_timer;
@@ -221,7 +206,7 @@ module.exports = function(admin, db, io) {
 
 		// Check update privilege
 		let validation = await validate_match(req.session, match_id);
-		if (!validation.success) return util.error(req, res, validation.data);
+		if (!validation.success) return UTIL.error(req, res, validation.data);
 
 		let match = validation.data;
 		match.chat.push(message);
@@ -238,15 +223,14 @@ module.exports = function(admin, db, io) {
 		res.json('success');
 	});
 
-
 	// Checkmate
-	router.post('/match/checkmate', util.fields('match_id', 'winner'), async (req, res) => {
+	router.post('/match/checkmate', UTIL.fields('match_id', 'winner'), async (req, res) => {
 		let match_id = req.fields.match_id;
 		let winner = req.fields.winner;
 
 		// Check update privilege
 		let validation = await validate_match(req.session, match_id);
-		if (!validation.success) return util.error(req, res, validation.data);
+		if (!validation.success) return UTIL.error(req, res, validation.data);
 
 		let match = validation.data;
 		let move = winner == CONST.TEAM.W ? CONST.ENDING.CHECKMATE_WHITE : CONST.ENDING.CHECKMATE_BLACK;
@@ -263,14 +247,13 @@ module.exports = function(admin, db, io) {
 		res.json('success');
 	});
 
-
 	// Stalemate
-	router.post('/match/stalemate', util.fields('match_id'), async (req, res) => {
+	router.post('/match/stalemate', UTIL.fields('match_id'), async (req, res) => {
 		let match_id = req.fields.match_id;
 
 		// Check update privilege
 		let validation = await validate_match(req.session, match_id);
-		if (!validation.success) return util.error(req, res, validation.data);
+		if (!validation.success) return UTIL.error(req, res, validation.data);
 
 		let match = validation.data;
 		match.moves.push(CONST.ENDING.STALEMATE);
@@ -286,15 +269,14 @@ module.exports = function(admin, db, io) {
 		res.json('success');
 	});
 
-
 	// Draw
-	router.post('/match/draw', util.fields('match_id', 'message'), async (req, res) => {
+	router.post('/match/draw', UTIL.fields('match_id', 'message'), async (req, res) => {
 		let match_id = req.fields.match_id;
 		let message = req.fields.message;
 
 		// Check update privilege
 		let validation = await validate_match(req.session, match_id);
-		if (!validation.success) return util.error(req, res, validation.data);
+		if (!validation.success) return UTIL.error(req, res, validation.data);
 
 		let match = validation.data;
 		match.chat.push(message);
@@ -312,16 +294,15 @@ module.exports = function(admin, db, io) {
 		res.json('success');
 	});
 
-
 	// Timesup
-	router.post('/match/timesup', util.fields('match_id', 'winner', 'message'), async (req, res) => {
+	router.post('/match/timesup', UTIL.fields('match_id', 'winner', 'message'), async (req, res) => {
 		let match_id = req.fields.match_id;
 		let winner = req.fields.winner;
 		let message = req.fields.message;
 
 		// Check update privilege
 		let validation = await validate_match(req.session, match_id);
-		if (!validation.success) return util.error(req, res, validation.data);
+		if (!validation.success) return UTIL.error(req, res, validation.data);
 
 		let match = validation.data;
 		let move = winner == CONST.TEAM.W ? CONST.ENDING.TIMESUP_WHITE : CONST.ENDING.TIMESUP_BLACK;
@@ -340,16 +321,15 @@ module.exports = function(admin, db, io) {
 		res.json('success');
 	});
 
-
 	// Resign
-	router.post('/match/resign', util.fields('match_id', 'winner', 'message'), async (req, res) => {
+	router.post('/match/resign', UTIL.fields('match_id', 'winner', 'message'), async (req, res) => {
 		let match_id = req.fields.match_id;
 		let winner = req.fields.winner;
 		let message = req.fields.message;
 
 		// Check update privilege
 		let validation = await validate_match(req.session, match_id);
-		if (!validation.success) return util.error(req, res, validation.data);
+		if (!validation.success) return UTIL.error(req, res, validation.data);
 
 		let match = validation.data;
 		let move = winner == CONST.TEAM.W ? CONST.ENDING.RESIGN_WHITE : CONST.ENDING.RESIGN_BLACK;
@@ -368,16 +348,15 @@ module.exports = function(admin, db, io) {
 		res.json('success');
 	});
 
-
 	// Undo move
-	router.post('/match/undo', util.fields('match_id', 'undo_team', 'message'), async (req, res) => {
+	router.post('/match/undo', UTIL.fields('match_id', 'undo_team', 'message'), async (req, res) => {
 		let match_id = req.fields.match_id;
 		let undo_team = req.fields.undo_team;
 		let message = req.fields.message;
 
 		// Check update privilege
 		let validation = await validate_match(req.session, match_id);
-		if (!validation.success) return util.error(req, res, validation.data);
+		if (!validation.success) return UTIL.error(req, res, validation.data);
 
 		// Pop latest move
 		let match = validation.data;
@@ -404,15 +383,14 @@ module.exports = function(admin, db, io) {
 		res.json('success');
 	});
 
-
 	// Cancel undo
-	router.post('/match/cancel_undo', util.fields('match_id', 'undo_team'), async (req, res) => {
+	router.post('/match/cancel_undo', UTIL.fields('match_id', 'undo_team'), async (req, res) => {
 		let match_id = req.fields.match_id;
 		let undo_team = req.fields.undo_team;
 
 		// Check update privilege
 		let validation = await validate_match(req.session, match_id);
-		if (!validation.success) return util.error(req, res, validation.data);
+		if (!validation.success) return UTIL.error(req, res, validation.data);
 
 		// Update database
 		let changes;
@@ -429,15 +407,14 @@ module.exports = function(admin, db, io) {
 		res.json('success');
 	});
 
-
 	// Cancel draw
-	router.post('/match/cancel_draw', util.fields('match_id', 'draw_team'), async (req, res) => {
+	router.post('/match/cancel_draw', UTIL.fields('match_id', 'draw_team'), async (req, res) => {
 		let match_id = req.fields.match_id;
 		let draw_team = req.fields.draw_team;
 
 		// Check update privilege
 		let validation = await validate_match(req.session, match_id);
-		if (!validation.success) return util.error(req, res, validation.data);
+		if (!validation.success) return UTIL.error(req, res, validation.data);
 
 		// Update database
 		let changes;
@@ -454,15 +431,14 @@ module.exports = function(admin, db, io) {
 		res.json('success');
 	});
 
-
 	// Register opponent
-	router.post('/match/register_opponent', util.fields('match_id', 'white'), async (req, res) => {
+	router.post('/match/register_opponent', UTIL.fields('match_id', 'white'), async (req, res) => {
 		let match_id = req.fields.match_id;
 		let white = req.fields.white;
 
 		// Check update privilege
 		let validation = await validate_match(req.session, match_id);
-		if (!validation.success) return util.error(req, res, validation.data);
+		if (!validation.success) return UTIL.error(req, res, validation.data);
 
 		// Update database
 		let changes = {
@@ -479,15 +455,14 @@ module.exports = function(admin, db, io) {
 		res.json('success');
 	});
 
-
 	// Message
-	router.post('/match/message', util.fields('match_id', 'message'), async (req, res) => {
+	router.post('/match/message', UTIL.fields('match_id', 'message'), async (req, res) => {
 		let match_id = req.fields.match_id;
 		let message = req.fields.message;
 
 		// Check update privilege
 		let validation = await validate_match(req.session, match_id);
-		if (!validation.success) return util.error(req, res, validation.data);
+		if (!validation.success) return UTIL.error(req, res, validation.data);
 
 		let match = validation.data;
 		match.chat.push(message);
@@ -502,15 +477,14 @@ module.exports = function(admin, db, io) {
 		res.json('success');
 	});
 
-
 	// Change theme
-	router.post('/match/change_theme', util.fields('match_id', 'theme'), async (req, res) => {
+	router.post('/match/change_theme', UTIL.fields('match_id', 'theme'), async (req, res) => {
 		let match_id = req.fields.match_id;
 		let theme = req.fields.theme;
 
 		// Check update privilege
 		let validation = await validate_match(req.session, match_id);
-		if (!validation.success) return util.error(req, res, validation.data);
+		if (!validation.success) return UTIL.error(req, res, validation.data);
 
 		// Update database
 		let changes = {
@@ -522,15 +496,14 @@ module.exports = function(admin, db, io) {
 		res.json('success');
 	});
 
-
 	// Ask undo
-	router.post('/match/ask_undo', util.fields('match_id', 'undo_team'), async (req, res) => {
+	router.post('/match/ask_undo', UTIL.fields('match_id', 'undo_team'), async (req, res) => {
 		let match_id = req.fields.match_id;
 		let undo_team = req.fields.undo_team;
 
 		// Check update privilege
 		let validation = await validate_match(req.session, match_id);
-		if (!validation.success) return util.error(req, res, validation.data);
+		if (!validation.success) return UTIL.error(req, res, validation.data);
 
 		// Update database
 		let changes;
@@ -547,15 +520,14 @@ module.exports = function(admin, db, io) {
 		res.json('success');
 	});
 
-
 	// Ask draw
-	router.post('/match/ask_draw', util.fields('match_id', 'draw_team'), async (req, res) => {
+	router.post('/match/ask_draw', UTIL.fields('match_id', 'draw_team'), async (req, res) => {
 		let match_id = req.fields.match_id;
 		let draw_team = req.fields.draw_team;
 
 		// Check update privilege
 		let validation = await validate_match(req.session, match_id);
-		if (!validation.success) return util.error(req, res, validation.data);
+		if (!validation.success) return UTIL.error(req, res, validation.data);
 
 		// Update database
 		let changes;
@@ -581,7 +553,7 @@ module.exports = function(admin, db, io) {
 	// Socket connection
 	io.use(function(socket, next) {
 		// Check session
-		let session = util.get_session(socket.handshake);
+		let session = UTIL.get_session(socket.handshake);
 		if (session == undefined)
 			next(new Error('Authentication error'));
 		else
