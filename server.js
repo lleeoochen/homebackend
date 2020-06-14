@@ -15,8 +15,12 @@ const io = require('socket.io')(server);
 const body_parser = require('body-parser')
 const cors = require('cors');
 
+var origins = ["https://weitungchen.com"];
+if (process.env.ALLOWED_ORIGINS)
+	origins = origins.concat(process.env.ALLOWED_ORIGINS.split(','));
+
 const cors_option = {
-	origin: process.env.ALLOWED_ORIGIN || "https://weitungchen.com",
+	origin: origins,
 	methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
 	preflightContinue: false,
 	optionsSuccessStatus: 204,
@@ -54,7 +58,7 @@ app.use((req, res, next) => {
 });
 
 // Add /chess routes
-const chess_router = require('./routes/chess')(admin, db, io, validate_session);
+const chess_router = require('./chess/router')(admin, db, io, validate_session, field);
 app.use('/chess', chess_router);
 
 
@@ -64,8 +68,8 @@ app.use('/chess', chess_router);
 
 
 // Create client session
-app.post('/login', UTIL.fields('auth_token'), async (req, res) => {
-	let auth_token = req.fields.auth_token;
+app.post('/login', field('auth_token'), async (req, res) => {
+	let auth_token = req.field.auth_token;
 
 	admin.auth().verifyIdToken(auth_token).then(async function(auth_user) {
 		// Get session id
@@ -137,4 +141,21 @@ function validate_session(req, res, next) {
 	if (req.session == undefined)
 		return UTIL.session_error(req, res);
 	next();
+}
+
+function field(...keys) {
+	return function (req, res, next) {
+		req.field = {};
+
+		for (let i in keys) {
+			let key = keys[i];
+			let val = req.query[key] || req.body[key];
+
+			if (val == undefined)
+				return UTIL.field_error(req, res, key);
+
+			req.field[key] = val;
+		}
+		next();
+	}
 }

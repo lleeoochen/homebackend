@@ -37,23 +37,6 @@ function field_error(req, res, field) {
 	return error(req, res, `missing field ${ field }.`);
 }
 
-function fields(...keys) {
-	return function (req, res, next) {
-		req.fields = {};
-
-		for (let i in keys) {
-			let key = keys[i];
-			let val = req.query[key] || req.body[key];
-
-			if (val == undefined)
-				return field_error(req, res, key);
-
-			req.fields[key] = val;
-		}
-		next();
-	}
-}
-
 function encrypt(ip, uid) {
 	return hammer.encrypt({ ip: ip, uid: uid });
 }
@@ -64,6 +47,5 @@ module.exports = {
 	error,
 	session_error,
 	field_error,
-	fields,
 	encrypt,
 };
