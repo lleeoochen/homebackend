@@ -2,6 +2,7 @@ const CONST      = require('./const');
 // var Piece        = require('./components/piece');
 var PieceFactory = require('./components/piecefactory');
 var Grid   = require('./components/grid');
+var Util   = require('./util');
 
 
 class ChessMatch {
@@ -28,24 +29,31 @@ class ChessMatch {
 		this.initBoard();
 		this.initPieces();
 
-		// console.log(match);
-		// console.log(this.chessboard);
-		// console.log(this.pieces);
-		console.log("Moves:");
+		this.update(match);
+	}
+
+	update(match) {
 
 		// Apply existing moves
 		while (this.moves_applied < match.moves.length) {
 			let move = Util.unpack(match.moves[this.moves_applied]);
+			let oldGrid = this.chessboard[move.old_x][move.old_y];
+			let newGrid = this.chessboard[move.new_x][move.new_y];
 
-			console.log(move);
-			this.moveChess(this.chessboard[move.old_x][move.old_y], this.chessboard[move.new_x][move.new_y]);
+			if (this.isValidMove(oldGrid, newGrid)) {
+				this.moveChess(oldGrid, newGrid);
+				console.log(move);
+			}
+			else {
+				console.log(move, ' --------- Invalid.');
+			}
 
 			// Update move counter and switch turn
 			this.moves_applied += 1;
-		}
 
-		console.log("Chessboard:");
-		console.log(this.toStr());
+			console.log("Chessboard:");
+			console.log(this.toStr());
+		}
 	}
 
 	//Intialize chessboard background
@@ -105,6 +113,9 @@ class ChessMatch {
 	}
 
 	isValidMove(oldGrid, newGrid) {
+		this.updateMoves(oldGrid);
+		console.log(this.moves);
+		console.log(this.get_piece(oldGrid));
 		let isLegal = this.isLegalMove(newGrid);
 		isLegal = isLegal && this.isKingSafe(oldGrid, newGrid);
 
@@ -177,7 +188,8 @@ class ChessMatch {
 
 	//Update and show all possible moves based on a specific grid
 	updateMoves(grid) {
-		this.moves = this.get_piece(grid).getPossibleMoves(this, this.chessboard, grid);
+		let downward = this.get_piece(grid).team == CONST.TEAM.B;
+		this.moves = this.get_piece(grid).getPossibleMoves(this, this.chessboard, grid, downward);
 
 		//Show left castle move for king
 		if (!this.king_moved && grid == this.king_grid && this.canCastle(grid, this.chessboard[grid.x - 2][grid.y]))
@@ -437,7 +449,7 @@ class ChessMatch {
 
 			for (let x = 0;  x < CONST.BOARD_SIZE; x++) {
 				let grid = this.chessboard[x][y];
-				let piece = this.get_piece(grid) ? this.get_piece(grid).type[0] + (this.get_piece(grid).team == CONST.TEAM.W ? 'ʷ' : 'ᵇ') : '  ';
+				let piece = this.get_piece(grid) ? this.get_piece(grid).type[0] + (this.get_piece(grid).team == CONST.TEAM.W ? 'ʷ' : 'ᵇ') : '‏‏‎ ‎ ';
 				rows.push(piece);
 			}
 
@@ -471,46 +483,5 @@ class ChessMatch {
 	}
 }
 
-
-
-class Util {
-	static checkPosition(pos) {
-		if (pos != null && this.inBound(pos.x) && this.inBound(pos.y))
-			return pos;
-		else
-			return null;
-	}
-
-	static inBound(i) {
-		return i >= 0 && i < CONST.BOARD_SIZE;
-	}
-
-	static pack(oldGrid, newGrid, turn) {
-		return oldGrid.x * 10000 + oldGrid.y * 1000 + newGrid.x * 100 + newGrid.y * 10 + (turn == CONST.TEAM.W ? 1 : 0);
-	}
-
-	static unpack(data, flipped) {
-		let move = {
-			old_x: Math.floor(data / 10000),
-			old_y: Math.floor((data % 10000) / 1000),
-			new_x: Math.floor((data % 1000) / 100),
-			new_y: Math.floor((data % 100) / 10),
-			turn: (Math.floor((data % 10) / 1) == 1) ? CONST.TEAM.W : CONST.TEAM.B
-		};
-
-		if (move.turn == CONST.TEAM.B) {
-			move.old_x = CONST.BOARD_SIZE - move.old_x - 1;
-			move.new_x = CONST.BOARD_SIZE - move.new_x - 1;
-			move.old_y = CONST.BOARD_SIZE - move.old_y - 1;
-			move.new_y = CONST.BOARD_SIZE - move.new_y - 1;
-		}
-
-		return move;
-	}
-
-	static gameFinished(match) {
-		return Math.floor(match.moves[match.moves.length - 1] / 10) == 0;
-	}
-}
 
 module.exports = ChessMatch;

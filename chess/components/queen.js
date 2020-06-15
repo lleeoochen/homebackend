@@ -1,5 +1,6 @@
 const CONST = require('../const');
 var Piece = require('./piece');
+var Util   = require('../util');
 
 
 module.exports = class Queen extends Piece {
@@ -24,7 +25,7 @@ module.exports = class Queen extends Piece {
 		possibleWays.push({x:grid.x, y:grid.y});
 		possibleWays.push({x:grid.x, y:grid.y});
 
-		for (let i = 1; i < BOARD_SIZE; i++) {
+		for (let i = 1; i < CONST.BOARD_SIZE; i++) {
 
 			for (let j = 0; j < possibleWays.length; j++) {
 

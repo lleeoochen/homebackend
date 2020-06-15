@@ -1,5 +1,6 @@
 const CONST = require('../const');
 var Piece = require('./piece');
+var Util   = require('../util');
 
 
 module.exports = class Pawn extends Piece {

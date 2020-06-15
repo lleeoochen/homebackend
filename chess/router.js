@@ -1,13 +1,9 @@
 const CONST = require('../helper/const');
 const UTIL = require('../helper/util');
 
-
 const express = require('express');
 const router = express.Router();
 var ChessMatch = require('./game');
-
-
-
 
 
 module.exports = function(admin, db, io, validate_session, field) {
@@ -69,12 +65,6 @@ module.exports = function(admin, db, io, validate_session, field) {
 		return res.json(matches_cache);
 	});
 
-
-	// =========================================================================================
-	// ================================== MATCH OPERATIONS =====================================
-	// =========================================================================================
-
-
 	// Test match
 	router.get('/print_board', field('match_id'), load_match_cache(), async (req, res) => {
 		let match_id = req.field.match_id;
@@ -82,6 +72,11 @@ module.exports = function(admin, db, io, validate_session, field) {
 
 		res.send(chess_match.toHTML());
 	});
+
+
+	// =========================================================================================
+	// ================================== MATCH OPERATIONS =====================================
+	// =========================================================================================
 
 
 	// Get match
@@ -97,7 +92,6 @@ module.exports = function(admin, db, io, validate_session, field) {
 			id: id,
 			data: data
 		});
-		matches_cache[id] = data;
 	});
 
 	// Get matches
@@ -207,7 +201,7 @@ module.exports = function(admin, db, io, validate_session, field) {
 				white_timer: white_timer,
 			};
 			await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
-			Object.assign(matches_cache[match_id], changes);
+			update_match_cache(match_id, changes);
 
 			res.json('success');
 	});
@@ -233,7 +227,7 @@ module.exports = function(admin, db, io, validate_session, field) {
 				chat: match.chat
 			};
 			await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
-			Object.assign(matches_cache[match_id], changes);
+			update_match_cache(match_id, changes);
 
 			res.json('success');
 	});
@@ -384,7 +378,7 @@ module.exports = function(admin, db, io, validate_session, field) {
 				};
 				await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
 			}
-			Object.assign(matches_cache[match_id], changes);
+			update_match_cache(match_id, changes);
 
 			res.json('success');
 	});
@@ -408,7 +402,7 @@ module.exports = function(admin, db, io, validate_session, field) {
 				changes = { black_undo: CONST.REQUEST.NONE };
 				await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
 			}
-			Object.assign(matches_cache[match_id], changes);
+			update_match_cache(match_id, changes);
 
 			res.json('success');
 	});
@@ -432,7 +426,7 @@ module.exports = function(admin, db, io, validate_session, field) {
 				changes = { black_draw: CONST.REQUEST.NONE };
 				await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
 			}
-			Object.assign(matches_cache[match_id], changes);
+			update_match_cache(match_id, changes);
 
 			res.json('success');
 	});
@@ -452,7 +446,7 @@ module.exports = function(admin, db, io, validate_session, field) {
 				updated: new Date().getTime(),
 			};
 			await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
-			Object.assign(matches_cache[match_id], changes);
+			update_match_cache(match_id, changes);
 
 			await db.collection(CONST.DB.USERS).doc(white).set({
 				matches: admin.firestore.FieldValue.arrayUnion(match_id),
@@ -478,7 +472,7 @@ module.exports = function(admin, db, io, validate_session, field) {
 				chat: match.chat,
 			};
 			await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
-			Object.assign(matches_cache[match_id], changes);
+			update_match_cache(match_id, changes);
 
 			res.json('success');
 	});
@@ -497,7 +491,7 @@ module.exports = function(admin, db, io, validate_session, field) {
 				theme: theme
 			};
 			await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
-			Object.assign(matches_cache[match_id], changes);
+			update_match_cache(match_id, changes);
 
 			res.json('success');
 	});
@@ -521,7 +515,7 @@ module.exports = function(admin, db, io, validate_session, field) {
 				changes = { black_undo: CONST.REQUEST.ASK };
 				await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
 			}
-			Object.assign(matches_cache[match_id], changes);
+			update_match_cache(match_id, changes);
 
 			res.json('success');
 	});
@@ -545,7 +539,7 @@ module.exports = function(admin, db, io, validate_session, field) {
 				changes = { black_draw: CONST.REQUEST.ASK };
 				await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
 			}
-			Object.assign(matches_cache[match_id], changes);
+			update_match_cache(match_id, changes);
 
 			res.json('success');
 	});
@@ -651,6 +645,11 @@ module.exports = function(admin, db, io, validate_session, field) {
 			match: match,
 			chessboard: new ChessMatch(match)
 		}
+	}
+
+	function update_match_cache(match_id, changes) {
+		Object.assign(matches_cache[match_id].match, changes);
+		matches_cache[match_id].chessboard.update(matches_cache[match_id].match);
 	}
 
 	function cleanCache() {
