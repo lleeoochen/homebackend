@@ -190,18 +190,18 @@ module.exports = function(admin, db, io, validate_session, field) {
 		load_match_cache(), async (req, res) => {
 			let { match_id, move, black_timer, white_timer } = req.field;
 
-			let match = req.match;
-			match.moves.push(move);
-
 			// Update database
 			let changes = {
-				moves: match.moves,
+				moves: req.match.moves.concat(move),
 				updated: new Date().getTime(),
 				black_timer: black_timer,
 				white_timer: white_timer,
 			};
+
+			if (!update_match_cache(match_id, changes, req.session.uid)) {
+				return UTIL.error(req, res, 'invalid move', CONST.HTTP.FORBIDDEN);
+			}
 			await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
-			update_match_cache(match_id, changes);
 
 			res.json('success');
 	});
@@ -226,8 +226,11 @@ module.exports = function(admin, db, io, validate_session, field) {
 				white_timer: white_timer,
 				chat: match.chat
 			};
+
+			if (!update_match_cache(match_id, changes, req.session.uid)) {
+				return UTIL.error(req, res, 'invalid move', CONST.HTTP.FORBIDDEN);
+			}
 			await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
-			update_match_cache(match_id, changes);
 
 			res.json('success');
 	});
@@ -369,6 +372,10 @@ module.exports = function(admin, db, io, validate_session, field) {
 					moves: match.moves,
 					white_undo: CONST.REQUEST.DONE
 				};
+
+				if (!update_match_cache(match_id, changes, req.session.uid)) {
+					return UTIL.error(req, res, 'invalid move', CONST.HTTP.FORBIDDEN);
+				}
 				await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
 			}
 			else {
@@ -376,9 +383,12 @@ module.exports = function(admin, db, io, validate_session, field) {
 					moves: match.moves,
 					black_undo: CONST.REQUEST.DONE
 				};
+
+				if (!update_match_cache(match_id, changes, req.session.uid)) {
+					return UTIL.error(req, res, 'invalid move', CONST.HTTP.FORBIDDEN);
+				}
 				await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
 			}
-			update_match_cache(match_id, changes);
 
 			res.json('success');
 	});
@@ -396,13 +406,20 @@ module.exports = function(admin, db, io, validate_session, field) {
 			let changes;
 			if (undo_team == CONST.TEAM.W) {
 				changes = { white_undo: CONST.REQUEST.NONE };
+
+				if (!update_match_cache(match_id, changes, req.session.uid)) {
+					return UTIL.error(req, res, 'invalid move', CONST.HTTP.FORBIDDEN);
+				}
 				await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
 			}
 			else {
 				changes = { black_undo: CONST.REQUEST.NONE };
+
+				if (!update_match_cache(match_id, changes, req.session.uid)) {
+					return UTIL.error(req, res, 'invalid move', CONST.HTTP.FORBIDDEN);
+				}
 				await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
 			}
-			update_match_cache(match_id, changes);
 
 			res.json('success');
 	});
@@ -420,13 +437,20 @@ module.exports = function(admin, db, io, validate_session, field) {
 			let changes;
 			if (draw_team == CONST.TEAM.W) {
 				changes = { white_draw: CONST.REQUEST.NONE };
+
+				if (!update_match_cache(match_id, changes, req.session.uid)) {
+					return UTIL.error(req, res, 'invalid move', CONST.HTTP.FORBIDDEN);
+				}
 				await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
 			}
 			else {
 				changes = { black_draw: CONST.REQUEST.NONE };
+
+				if (!update_match_cache(match_id, changes, req.session.uid)) {
+					return UTIL.error(req, res, 'invalid move', CONST.HTTP.FORBIDDEN);
+				}
 				await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
 			}
-			update_match_cache(match_id, changes);
 
 			res.json('success');
 	});
@@ -445,8 +469,11 @@ module.exports = function(admin, db, io, validate_session, field) {
 				white: white,
 				updated: new Date().getTime(),
 			};
+
+			if (!update_match_cache(match_id, changes, req.session.uid)) {
+				return UTIL.error(req, res, 'invalid move', CONST.HTTP.FORBIDDEN);
+			}
 			await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
-			update_match_cache(match_id, changes);
 
 			await db.collection(CONST.DB.USERS).doc(white).set({
 				matches: admin.firestore.FieldValue.arrayUnion(match_id),
@@ -471,8 +498,11 @@ module.exports = function(admin, db, io, validate_session, field) {
 			let changes = {
 				chat: match.chat,
 			};
+
+			if (!update_match_cache(match_id, changes, req.session.uid)) {
+				return UTIL.error(req, res, 'invalid move', CONST.HTTP.FORBIDDEN);
+			}
 			await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
-			update_match_cache(match_id, changes);
 
 			res.json('success');
 	});
@@ -490,8 +520,11 @@ module.exports = function(admin, db, io, validate_session, field) {
 			let changes = {
 				theme: theme
 			};
+
+			if (!update_match_cache(match_id, changes, req.session.uid)) {
+				return UTIL.error(req, res, 'invalid move', CONST.HTTP.FORBIDDEN);
+			}
 			await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
-			update_match_cache(match_id, changes);
 
 			res.json('success');
 	});
@@ -509,13 +542,20 @@ module.exports = function(admin, db, io, validate_session, field) {
 			let changes;
 			if (undo_team == CONST.TEAM.W) {
 				changes = { white_undo: CONST.REQUEST.ASK };
+
+				if (!update_match_cache(match_id, changes, req.session.uid)) {
+					return UTIL.error(req, res, 'invalid move', CONST.HTTP.FORBIDDEN);
+				}
 				await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
 			}
 			else {
 				changes = { black_undo: CONST.REQUEST.ASK };
+
+				if (!update_match_cache(match_id, changes, req.session.uid)) {
+					return UTIL.error(req, res, 'invalid move', CONST.HTTP.FORBIDDEN);
+				}
 				await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
 			}
-			update_match_cache(match_id, changes);
 
 			res.json('success');
 	});
@@ -533,13 +573,20 @@ module.exports = function(admin, db, io, validate_session, field) {
 			let changes;
 			if (draw_team == CONST.TEAM.W) {
 				changes = { white_draw: CONST.REQUEST.ASK };
+
+				if (!update_match_cache(match_id, changes, req.session.uid)) {
+					return UTIL.error(req, res, 'invalid move', CONST.HTTP.FORBIDDEN);
+				}
 				await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
 			}
 			else {
 				changes = { black_draw: CONST.REQUEST.ASK };
+
+				if (!update_match_cache(match_id, changes, req.session.uid)) {
+					return UTIL.error(req, res, 'invalid move', CONST.HTTP.FORBIDDEN);
+				}
 				await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
 			}
-			update_match_cache(match_id, changes);
 
 			res.json('success');
 	});
@@ -613,7 +660,8 @@ module.exports = function(admin, db, io, validate_session, field) {
 
 			// Add cache if it's empty
 			if (matches_cache[match_id] == undefined) {
-				await init_match_cache(match_id);
+				if (!await init_match_cache(match_id, req.session.uid))
+					return UTIL.error(req, res, 'invalid move', CONST.HTTP.FORBIDDEN)
 			}
 			// Error if match ended
 			else if (matches_cache[match_id] == 'ended') {
@@ -638,18 +686,36 @@ module.exports = function(admin, db, io, validate_session, field) {
 		}
 	}
 
-	async function init_match_cache(match_id) {
+	async function init_match_cache(match_id, player) {
 		let match = await db.collection(CONST.DB.MATCHES).doc(match_id).get();
 		match = match.data();
-		matches_cache[match_id] = {
-			match: match,
-			chessboard: new ChessMatch(match)
-		}
+
+		let simulation = new ChessMatch();
+		let succeed = simulation.update(match);
+
+		if (succeed)
+			matches_cache[match_id] = {
+				match: match,
+				simulation: simulation
+			};
+
+		return succeed;
 	}
 
-	function update_match_cache(match_id, changes) {
+	function update_match_cache(match_id, changes, player) {
+		let copy = {};
+		console.log(matches_cache[match_id].match);
+		Object.assign(copy, matches_cache[match_id].match);
 		Object.assign(matches_cache[match_id].match, changes);
-		matches_cache[match_id].chessboard.update(matches_cache[match_id].match);
+		console.log(copy);
+		console.log(matches_cache[match_id].match);
+
+		let succeed = matches_cache[match_id].simulation.update(matches_cache[match_id].match, player);
+
+		if (!succeed) {
+			matches_cache[match_id].match = copy;
+		}
+		return succeed;
 	}
 
 	function cleanCache() {
