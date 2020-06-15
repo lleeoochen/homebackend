@@ -7,16 +7,13 @@ var Util   = require('./util');
 
 class ChessMatch {
 
-	constructor(match) {
+	constructor() {
 		// White's side of chessboard
 		this.chessboard = [[],[],[],[],[],[],[],[]];
 		this.moves = [];
 		this.moves_applied = 0;
 
-		this.my_team = CONST.TEAM.W;
-		this.enemy_team = CONST.TEAM.B;
-
-		this.king_grid = null;
+		this.king_grid = {};
 		this.white_king_moved = false;
 		this.black_king_moved = false;
 
@@ -115,17 +112,18 @@ class ChessMatch {
 		this.chessboard[x][y].piece = id;
 		this.pieces[id] = PieceFactory.createPiece(team, type);
 
-		if (this.my_team == team && type == CONST.CHESS.King)
-			this.king_grid = this.chessboard[x][y];
+		if (type == CONST.CHESS.King)
+			this.king_grid[team] = this.chessboard[x][y];
 	}
 
 	isValidMove(oldGrid, newGrid) {
 		if (!this.get_piece(oldGrid))
 			return;
 
+		let team = this.get_piece(oldGrid).team;
 		this.updateMoves(oldGrid);
 		let isLegal = this.isLegalMove(newGrid);
-		isLegal = isLegal && this.isKingSafe(oldGrid, newGrid);
+		isLegal = isLegal && this.isKingSafe(team, oldGrid, newGrid);
 
 		if (this.canCastle(oldGrid, newGrid))
 			return true;
@@ -172,15 +170,15 @@ class ChessMatch {
 		return {friends: friends, enemies: enemies};
 	}
 
-	isCheckmate() {
+	isCheckmate(team) {
 		for (let i = 0; i < this.chessboard.length; i++) {
 			for (let j = 0; j < this.chessboard.length; j++) {
 				let grid = this.chessboard[i][j];
-				if (this.get_piece(grid) != null && this.get_piece(grid).team == this.my_team) {
+				if (this.get_piece(grid) != null && this.get_piece(grid).team == team) {
 					let validMoves = this.get_piece(grid).getPossibleMoves(this, this.chessboard, grid);
 
 					for (let k = 0; k < validMoves.length; k++) {
-						if (this.isKingSafe(grid, this.chessboard[validMoves[k].x][validMoves[k].y])) {
+						if (this.isKingSafe(team, grid, this.chessboard[validMoves[k].x][validMoves[k].y])) {
 							return STATUS_NONE;
 						}
 					}
@@ -188,7 +186,7 @@ class ChessMatch {
 			}
 		}
 
-		if (this.isKingSafe()) {
+		if (this.isKingSafe(team)) {
 			return STATUS_STALEMATE;
 		}
 		return STATUS_CHECKMATE;
@@ -199,19 +197,23 @@ class ChessMatch {
 		let downward = this.get_piece(grid).team == CONST.TEAM.B;
 		this.moves = this.get_piece(grid).getPossibleMoves(this, this.chessboard, grid, downward);
 
-		//Show left castle move for king
-		if (!this.white_king_moved && grid == this.king_grid && this.canCastle(grid, this.chessboard[grid.x - 2][grid.y]))
-			this.moves.push(this.chessboard[grid.x - 2][grid.y]);
+		if ((!this.white_king_moved && grid == this.king_grid[CONST.TEAM.W]) ||
+			(!this.black_king_moved && grid == this.king_grid[CONST.TEAM.B])) {
 
-		//Show right castle move for king
-		if (!this.white_king_moved && grid == this.king_grid && this.canCastle(grid, this.chessboard[grid.x + 2][grid.y]))
-			this.moves.push(this.chessboard[grid.x + 2][grid.y]);
+			//Show left castle move for king
+			if (this.canCastle(grid, this.chessboard[grid.x - 2][grid.y]))
+				this.moves.push(this.chessboard[grid.x - 2][grid.y]);
+
+			//Show right castle move for king
+			if (this.canCastle(grid, this.chessboard[grid.x + 2][grid.y]))
+				this.moves.push(this.chessboard[grid.x + 2][grid.y]);
+		}
 
 		//Show en passant move for pawn
 		if (this.passant_pawn) {
 			if (this.get_piece(grid).team != this.get_piece(this.passant_pawn).team) {
 				if (Math.abs(grid.x - this.passant_pawn.x) == 1 && grid.y == this.passant_pawn.y) {
-					if (this.get_piece(grid).team == this.my_team)
+					if (this.get_piece(grid).team == CONST.TEAM.W)
 						this.moves.push(this.chessboard[this.passant_pawn.x][this.passant_pawn.y - 1]);
 					else
 						this.moves.push(this.chessboard[this.passant_pawn.x][this.passant_pawn.y + 1]);
@@ -219,15 +221,6 @@ class ChessMatch {
 			}
 		}
 	}
-
-	//Get numbering from grid
-	getNumbering(x, y) {
-		return {
-			x: (this.my_team == CONST.TEAM.B) ? y + 1 : CONST.BOARD_SIZE - y,
-			y: (this.my_team == CONST.TEAM.B) ? String.fromCharCode(97 + 7 - x) : String.fromCharCode(x + 97)
-		}
-	}
-
 
 	//Check legal move of chess piece
 	isLegalMove(grid) {
@@ -239,21 +232,21 @@ class ChessMatch {
 	}
 
 	//Check legal move of chess piece
-	isKingSafe(oldGrid, newGrid) {
+	isKingSafe(team, oldGrid, newGrid) {
 		let board = this.copyBoard(this.chessboard);
 
 		let isKingSafe = true;
-		let target_grid = this.king_grid;
+		let target_grid = this.king_grid[team];
 
 		if (oldGrid && newGrid) {
 			board[newGrid.x][newGrid.y].piece = board[oldGrid.x][oldGrid.y].piece;
 			board[oldGrid.x][oldGrid.y].piece = -1;
 
-			if (oldGrid == this.king_grid)
+			if (oldGrid == this.king_grid[team])
 				target_grid = newGrid;
 		}
 
-		let validPieces = this.getReachablePieces(board, target_grid, this.my_team)
+		let validPieces = this.getReachablePieces(board, target_grid, team)
 		let enemies = validPieces.enemies;
 		let friends = validPieces.friends;
 
@@ -261,27 +254,39 @@ class ChessMatch {
 	}
 
 	canCastle(oldGrid, newGrid) {
+		let team = this.get_piece(oldGrid).team;
+
+		// Check piece type
 		if (this.get_piece(oldGrid) == null) return false;
 		if (this.get_piece(oldGrid).type != CONST.CHESS.King) return false;
+
+		// Check piece location
 		if (newGrid.y != 0 && newGrid.y != CONST.BOARD_SIZE - 1) return false;
 		if (Math.abs(newGrid.x - oldGrid.x) != 2) return false;
-		if (this.white_king_moved) return false;
-		if (!this.isKingSafe()) return false;
 
+		// Check if king moved
+		if (team == CONST.TEAM.W && this.white_king_moved) return false;
+		if (team == CONST.TEAM.B && this.black_king_moved) return false;
+
+		// Check if king is targeted/safe
+		if (!this.isKingSafe(team)) return false;
+
+
+		// Validate left/right castle
 		let leftSide = newGrid.x - oldGrid.x < 0;
 		if (leftSide) {
 			for (let x = 1; x < oldGrid.x; x++)
 				if (this.get_piece(this.chessboard[x][CONST.BOARD_SIZE - 1]))
 					return false;
-			return this.isKingSafe(this.king_grid, this.chessboard[this.king_grid.x - 1][this.king_grid.y])
-				&& this.isKingSafe(this.king_grid, this.chessboard[this.king_grid.x - 2][this.king_grid.y]);
+			return this.isKingSafe(team, this.king_grid[team], this.chessboard[this.king_grid[team].x - 1][this.king_grid[team].y])
+				&& this.isKingSafe(team, this.king_grid[team], this.chessboard[this.king_grid[team].x - 2][this.king_grid[team].y]);
 		}
 		else {
 			for (let x = oldGrid.x + 1; x < CONST.BOARD_SIZE - 1; x++)
 				if (this.get_piece(this.chessboard[x][CONST.BOARD_SIZE - 1]))
 					return false;
-			return this.isKingSafe(this.king_grid, this.chessboard[this.king_grid.x + 1][this.king_grid.y])
-				&& this.isKingSafe(this.king_grid, this.chessboard[this.king_grid.x + 2][this.king_grid.y]);
+			return this.isKingSafe(team, this.king_grid[team], this.chessboard[this.king_grid[team].x + 1][this.king_grid[team].y])
+				&& this.isKingSafe(team, this.king_grid[team], this.chessboard[this.king_grid[team].x + 2][this.king_grid[team].y]);
 		}
 	}
 
@@ -313,6 +318,7 @@ class ChessMatch {
 
 	//Move chess from oldGrid to newGrid
 	moveChess(oldGrid, newGrid) {
+		let team = this.get_piece(oldGrid).team;
 
 		this.stackEatenPiece(oldGrid, newGrid, newGrid, newGrid.piece, false, CONST.FLAG_NONE);
 
@@ -333,13 +339,11 @@ class ChessMatch {
 		this.movePawnToQueen(oldGrid, newGrid);
 
 		// Update king position
-		this.king_grid = oldGrid == this.king_grid ? newGrid : this.king_grid;
+		if (oldGrid == this.king_grid[team])
+			this.king_grid[team] = newGrid;
 
 		// Clear old grid piece
 		oldGrid.piece = -1;
-
-		// Switch turn
-		// switchTurn();
 	}
 
 	movePassantPawn(oldGrid, newGrid) {
@@ -451,14 +455,14 @@ class ChessMatch {
 	}
 
 
-	toBoard() {
+	toBoard(chessboard=this.chessboard) {
 		let board = [];
 
 		for (let y = 0;  y < CONST.BOARD_SIZE; y++) {
 			let rows = [];
 
 			for (let x = 0;  x < CONST.BOARD_SIZE; x++) {
-				let grid = this.chessboard[x][y];
+				let grid = chessboard[x][y];
 				let piece = this.get_piece(grid) ? this.get_piece(grid).type[0] + (this.get_piece(grid).team == CONST.TEAM.W ? 'ʷ' : 'ᵇ') : '‏‏‎ ‎ ';
 				rows.push(piece);
 			}
@@ -469,8 +473,8 @@ class ChessMatch {
 		return board;
 	}
 
-	toStr() {
-		let board = this.toBoard();
+	toStr(chessboard=this.chessboard) {
+		let board = this.toBoard(chessboard);
 
 		for (let x in board) {
 			board[x] = '| ' + board[x].join('| ') + '|';
@@ -481,8 +485,8 @@ class ChessMatch {
 			       '\n└───┴───┴───┴───┴───┴───┴───┴───┘';
 	}
 
-	toHTML() {
-		let board = this.toBoard();
+	toHTML(chessboard=this.chessboard) {
+		let board = this.toBoard(chessboard);
 
 		for (let x in board) {
 			board[x] = '<tr><td>' + board[x].join('</td><td>') + '</td></tr>';

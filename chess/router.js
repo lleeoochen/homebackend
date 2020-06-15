@@ -68,7 +68,8 @@ module.exports = function(admin, db, io, validate_session, field) {
 	// Test match
 	router.get('/print_board', field('match_id'), load_match_cache(), async (req, res) => {
 		let match_id = req.field.match_id;
-		let chess_match = new ChessMatch(req.match);
+		let chess_match = new ChessMatch();
+		chess_match.update(req.match);
 
 		res.send(chess_match.toHTML());
 	});
@@ -704,14 +705,10 @@ module.exports = function(admin, db, io, validate_session, field) {
 
 	function update_match_cache(match_id, changes, player) {
 		let copy = {};
-		console.log(matches_cache[match_id].match);
 		Object.assign(copy, matches_cache[match_id].match);
 		Object.assign(matches_cache[match_id].match, changes);
-		console.log(copy);
-		console.log(matches_cache[match_id].match);
 
 		let succeed = matches_cache[match_id].simulation.update(matches_cache[match_id].match, player);
-
 		if (!succeed) {
 			matches_cache[match_id].match = copy;
 		}
