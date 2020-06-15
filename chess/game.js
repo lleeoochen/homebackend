@@ -8,6 +8,10 @@ var Util   = require('./util');
 class ChessMatch {
 
 	constructor() {
+		this.init();
+	}
+
+	init() {
 		// White's side of chessboard
 		this.chessboard = [[],[],[],[],[],[],[],[]];
 		this.moves = [];
@@ -29,6 +33,14 @@ class ChessMatch {
 	}
 
 	update(match, player) {
+		// while (this.moves_applied > match.moves.length) {
+		// 	unmoveChess();
+		// }
+		if (this.moves_applied > match.moves.length) {
+			this.init();
+			player = undefined;
+		}
+
 		// Apply existing moves
 		while (this.moves_applied < match.moves.length) {
 			let move = Util.unpack(match.moves[this.moves_applied]);
