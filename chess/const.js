@@ -1,5 +1,5 @@
 module.exports = Object.freeze({
-	CHESS: {King: "King", Queen: "Queen", Rook: "Rook", Bishop: "Bishop", Knight: "Knight", Pawn: "Pawn", None: "None"},
+	CHESS: {King: "King", Queen: "Queen", Rook: "Rook", Bishop: "Bishop", Knight: "Horse", Pawn: "Pawn", None: "None"},
 	TEAM: {B: "B", W: "W", None:"N"},
 	VALUE: {King: 200, Queen: 9, Rook: 5, Bishop: 3, Knight: 3, Pawn: 1, None: 0},
 

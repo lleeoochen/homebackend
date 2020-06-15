@@ -66,7 +66,7 @@ module.exports = function(admin, db, io, validate_session, field) {
 	// Get cache
 	router.get('/get_cache', async (req, res) => {
 		console.log(matches_cache);
-		return res.json('success');
+		return res.json(matches_cache);
 	});
 
 
@@ -76,20 +76,11 @@ module.exports = function(admin, db, io, validate_session, field) {
 
 
 	// Test match
-	router.get('/test_match', field('match_id'), load_match_cache(), async (req, res) => {
+	router.get('/print_board', field('match_id'), load_match_cache(), async (req, res) => {
 		let match_id = req.field.match_id;
-		new ChessMatch(req.match);
+		let chess_match = new ChessMatch(req.match);
 
-		// Query database
-		let data = await db.collection(CONST.DB.MATCHES).doc(match_id).get();
-		data = data.data();
-
-		// Respond to client
-		res.send({
-			match_id: match_id,
-			data: data
-		});
-		matches_cache[match_id] = data;
+		res.send(chess_match.toHTML());
 	});
 
 

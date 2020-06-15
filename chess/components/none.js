@@ -8,7 +8,7 @@ module.exports = class None extends Piece {
 		super(team, CONST.CHESS.None, CONST.VALUE.None, image);
 	}
 
-	getPossibleMoves(chessboard, grid) {
+	getPossibleMoves(game, chessboard, grid) {
 		return [];
 	}
 }

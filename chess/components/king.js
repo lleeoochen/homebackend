@@ -8,11 +8,11 @@ module.exports = class King extends Piece {
 		super(team, CONST.CHESS.King, CONST.VALUE.King, image);
 	}
 
-	getPossibleMoves(chessboard, grid) {
+	getPossibleMoves(game, chessboard, grid) {
 		let moves = [];
 		let possibleWays = [];
 
-		if (grid.get_piece() == null)
+		if (game.get_piece(grid) == null)
 			return moves;
 
 		possibleWays.push({x:grid.x + 1, y:grid.y});
@@ -30,11 +30,11 @@ module.exports = class King extends Piece {
 			if (move != null) {
 
 				let target = chessboard[move.x][move.y];
-				if (target.get_piece() == null)
+				if (game.get_piece(target) == null)
 					moves.push(Object.assign({}, move));
 
 				else {
-					if (target.get_piece().team != grid.get_piece().team)
+					if (game.get_piece(target).team != game.get_piece(grid).team)
 						moves.push(Object.assign({}, move));
 					possibleWays[j] = null;
 				}

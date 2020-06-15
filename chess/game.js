@@ -23,13 +23,15 @@ class ChessMatch {
 		this.moves_stack = [];
 		this.passant_stack = [];
 		this.id = 0;
+		this.pieces = {};
 
 		this.initBoard();
 		this.initPieces();
 
-		console.log(match);
-		console.log(this.chessboard);
-		console.log(Grid.pieces);
+		// console.log(match);
+		// console.log(this.chessboard);
+		// console.log(this.pieces);
+		console.log("Moves:");
 
 		// Apply existing moves
 		while (this.moves_applied < match.moves.length) {
@@ -40,15 +42,16 @@ class ChessMatch {
 
 			// Update move counter and switch turn
 			this.moves_applied += 1;
-			console.log("hi");
 		}
-		console.log(this.chessboard);
+
+		console.log("Chessboard:");
+		console.log(this.toStr());
 	}
 
 	//Intialize chessboard background
 	initBoard(){
-		for (var x = 0; x < CONST.BOARD_SIZE; x++) {
-			for (var y = 0; y < CONST.BOARD_SIZE; y++) {
+		for (let x = 0; x < CONST.BOARD_SIZE; x++) {
+			for (let y = 0; y < CONST.BOARD_SIZE; y++) {
 				//Grid instance
 				this.chessboard[x][y] = new Grid(x, y, -1, null);
 			}
@@ -95,7 +98,7 @@ class ChessMatch {
 	//Intialize each chess piece
 	initEachPiece(id, x, y, team, type) {
 		this.chessboard[x][y].piece = id;
-		Grid.pieces[id] = PieceFactory.createPiece(team, type);
+		this.pieces[id] = PieceFactory.createPiece(team, type);
 
 		if (this.my_team == team && type == CONST.CHESS.King)
 			this.king_grid = this.chessboard[x][y];
@@ -121,14 +124,14 @@ class ChessMatch {
 
 		let keyPiece = keyGrid.piece;
 		keyGrid.piece = 100;
-		pieces[100] = PieceFactory.createPiece(team, CONST.CHESS.None, null);
+		this.pieces[100] = PieceFactory.createPiece(team, CONST.CHESS.None, null);
 
 		for (let i = 0; i < board.length; i++) {
 			for (let j = 0; j < board.length; j++) {
 				let grid = board[i][j];
-				if (grid.get_piece() != null) {
-					let downward = grid.get_piece().team != this.my_team;
-					let validMoves = grid.get_piece().getPossibleMoves(board, grid, downward);
+				if (this.get_piece(grid) != null) {
+					let downward = this.get_piece(grid).team != this.my_team;
+					let validMoves = this.get_piece(grid).getPossibleMoves(this, board, grid, downward);
 					let found = false;
 
 					for (let k = 0; k < validMoves.length && !found; k++)
@@ -136,7 +139,7 @@ class ChessMatch {
 							found = true;
 
 					if (found) {
-						if (grid.get_piece().team == team)
+						if (this.get_piece(grid).team == team)
 							friends.push(grid);
 						else
 							enemies.push(grid);
@@ -154,8 +157,8 @@ class ChessMatch {
 		for (let i = 0; i < this.chessboard.length; i++) {
 			for (let j = 0; j < this.chessboard.length; j++) {
 				let grid = this.chessboard[i][j];
-				if (grid.get_piece() != null && grid.get_piece().team == this.my_team) {
-					let validMoves = grid.get_piece().getPossibleMoves(this.chessboard, grid);
+				if (this.get_piece(grid) != null && this.get_piece(grid).team == this.my_team) {
+					let validMoves = this.get_piece(grid).getPossibleMoves(this, this.chessboard, grid);
 
 					for (let k = 0; k < validMoves.length; k++) {
 						if (this.isKingSafe(grid, this.chessboard[validMoves[k].x][validMoves[k].y])) {
@@ -174,7 +177,7 @@ class ChessMatch {
 
 	//Update and show all possible moves based on a specific grid
 	updateMoves(grid) {
-		this.moves = grid.get_piece().getPossibleMoves(this.chessboard, grid);
+		this.moves = this.get_piece(grid).getPossibleMoves(this, this.chessboard, grid);
 
 		//Show left castle move for king
 		if (!this.king_moved && grid == this.king_grid && this.canCastle(grid, this.chessboard[grid.x - 2][grid.y]))
@@ -186,9 +189,9 @@ class ChessMatch {
 
 		//Show en passant move for pawn
 		if (this.passant_pawn) {
-			if (grid.get_piece().team != this.passant_pawn.get_piece().team) {
+			if (this.get_piece(grid).team != this.get_piece(this.passant_pawn).team) {
 				if (Math.abs(grid.x - this.passant_pawn.x) == 1 && grid.y == this.passant_pawn.y) {
-					if (grid.get_piece().team == this.my_team)
+					if (this.get_piece(grid).team == this.my_team)
 						this.moves.push(this.chessboard[this.passant_pawn.x][this.passant_pawn.y - 1]);
 					else
 						this.moves.push(this.chessboard[this.passant_pawn.x][this.passant_pawn.y + 1]);
@@ -247,14 +250,14 @@ class ChessMatch {
 		let leftSide = newGrid.x - oldGrid.x < 0;
 		if (leftSide) {
 			for (let x = 1; x < oldGrid.x; x++)
-				if (this.chessboard[x][CONST.BOARD_SIZE - 1].get_piece())
+				if (this.get_piece(this.chessboard[x][CONST.BOARD_SIZE - 1]))
 					return false;
 			return this.isKingSafe(this.king_grid, this.chessboard[this.king_grid.x - 1][this.king_grid.y])
 				&& this.isKingSafe(this.king_grid, this.chessboard[this.king_grid.x - 2][this.king_grid.y]);
 		}
 		else {
 			for (let x = oldGrid.x + 1; x < CONST.BOARD_SIZE - 1; x++)
-				if (this.chessboard[x][CONST.BOARD_SIZE - 1].get_piece())
+				if (this.get_piece(this.chessboard[x][CONST.BOARD_SIZE - 1]))
 					return false;
 			return this.isKingSafe(this.king_grid, this.chessboard[this.king_grid.x + 1][this.king_grid.y])
 				&& this.isKingSafe(this.king_grid, this.chessboard[this.king_grid.x + 2][this.king_grid.y]);
@@ -322,12 +325,12 @@ class ChessMatch {
 
 		// Check passant pawn can be killed
 		if (this.passant_pawn) {
-			if (oldGrid.get_piece().team == this.my_team && this.passant_pawn.get_piece().team != this.my_team) {
+			if (this.get_piece(oldGrid).team == this.my_team && this.get_piece(this.passant_pawn).team != this.my_team) {
 				if (newGrid.x == this.passant_pawn.x && newGrid.y == this.passant_pawn.y - 1) {
 					kill_passant_pawn = true;
 				}
 			}
-			else if (oldGrid.get_piece().team != this.my_team && this.passant_pawn.get_piece().team == this.my_team) {
+			else if (this.get_piece(oldGrid).team != this.my_team && this.get_piece(this.passant_pawn).team == this.my_team) {
 				if (newGrid.x == this.passant_pawn.x && newGrid.y == this.passant_pawn.y + 1) {
 					kill_passant_pawn = true;
 				}
@@ -342,8 +345,8 @@ class ChessMatch {
 
 		// Update passant pawns on 2 moves
 		this.passant_pawn = undefined;
-		if (oldGrid.get_piece().type == CONST.CHESS.Pawn) {
-			if (oldGrid.get_piece().team == this.my_team) {
+		if (this.get_piece(oldGrid).type == CONST.CHESS.Pawn) {
+			if (this.get_piece(oldGrid).team == this.my_team) {
 				if (oldGrid.y - newGrid.y == 2) {
 					this.passant_pawn = newGrid;
 				}
@@ -359,10 +362,10 @@ class ChessMatch {
 
 	moveCastleKing(oldGrid, newGrid) {
 		// If oldGrid is king
-		if (oldGrid.get_piece().type == CONST.CHESS.King) {
+		if (this.get_piece(oldGrid).type == CONST.CHESS.King) {
 
 			// If either king hasn't move
-			if (this.my_team == oldGrid.get_piece().team && !this.king_moved || this.my_team != oldGrid.get_piece().team && !this.other_king_moved) {
+			if (this.my_team == this.get_piece(oldGrid).team && !this.king_moved || this.my_team != this.get_piece(oldGrid).team && !this.other_king_moved) {
 
 				// Perform right castle
 				if (newGrid.x - oldGrid.x == 2) {
@@ -387,21 +390,21 @@ class ChessMatch {
 		}
 
 		//Other King has moved, cannot castle anymore
-		if (this.my_team != oldGrid.get_piece().team && oldGrid.get_piece().type == CONST.CHESS.King) {
+		if (this.my_team != this.get_piece(oldGrid).team && this.get_piece(oldGrid).type == CONST.CHESS.King) {
 			this.other_king_moved = true;
 		}
 	}
 
 	movePawnToQueen(oldGrid, newGrid) {
-		if (newGrid.get_piece().type == CONST.CHESS.Pawn) {
-			let myPawnArrived = newGrid.get_piece().team == this.my_team && newGrid.y == 0;
-			let enemyPawnArrived = newGrid.get_piece().team != this.my_team && newGrid.y == CONST.BOARD_SIZE - 1;
+		if (this.get_piece(newGrid).type == CONST.CHESS.Pawn) {
+			let myPawnArrived = this.get_piece(newGrid).team == this.my_team && newGrid.y == 0;
+			let enemyPawnArrived = this.get_piece(newGrid).team != this.my_team && newGrid.y == CONST.BOARD_SIZE - 1;
 
 			if (myPawnArrived || enemyPawnArrived) {
 				let eatenPiece = moves_stack.pop().eaten_piece;
 				this.stackEatenPiece(oldGrid, newGrid, newGrid, eatenPiece, false, CONST.FLAG_PAWN_TO_QUEEN);
 
-				initEachPiece(id++, newGrid.x, newGrid.y, newGrid.get_piece().team, CONST.CHESS.Queen);
+				initEachPiece(id++, newGrid.x, newGrid.y, this.get_piece(newGrid).team, CONST.CHESS.Queen);
 			}
 		}
 	}
@@ -420,6 +423,52 @@ class ChessMatch {
 		});
 	}
 
+	get_piece(grid) {
+		if (grid.piece == -1) return null;
+		return this.pieces[grid.piece];
+	}
+
+
+	toBoard() {
+		let board = [];
+
+		for (let y = 0;  y < CONST.BOARD_SIZE; y++) {
+			let rows = [];
+
+			for (let x = 0;  x < CONST.BOARD_SIZE; x++) {
+				let grid = this.chessboard[x][y];
+				let piece = this.get_piece(grid) ? this.get_piece(grid).type[0] + (this.get_piece(grid).team == CONST.TEAM.W ? 'ʷ' : 'ᵇ') : '  ';
+				rows.push(piece);
+			}
+
+			board.push(rows);
+		}
+
+		return board;
+	}
+
+	toStr() {
+		let board = this.toBoard();
+
+		for (let x in board) {
+			board[x] = '| ' + board[x].join('| ') + '|';
+		}
+
+		return       '┌───┬───┬───┬───┬───┬───┬───┬───┐\n' +
+		board.join('\n|───|───|───|───|───|───|───|───|\n') +
+			       '\n└───┴───┴───┴───┴───┴───┴───┴───┘';
+	}
+
+	toHTML() {
+		let board = this.toBoard();
+
+		for (let x in board) {
+			board[x] = '<tr><td>' + board[x].join('</td><td>') + '</td></tr>';
+		}
+
+		return '<table>' + board.join('\n') + '</table>' +
+			'<style> td { border: black 1px solid; } </style>';
+	}
 }
 
 
