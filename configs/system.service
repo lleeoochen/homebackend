@@ -1,0 +1,13 @@
+[Unit]
+Description=home backend node server
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/npm start --prefix /home/nerd/homebackend 
+User=nerd
+StandardOutput=file:/home/nerd/homebackend/log.txt
+StandardError=file:/home/nerd/homebackend/log.txt
+
+[Install]
+WantedBy=multi-user.target
+
