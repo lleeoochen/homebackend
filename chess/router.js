@@ -28,7 +28,7 @@ module.exports = function(admin, db, io, validate_session, field) {
 
 	// Get profile
 	router.get('/get_profile', async (req, res) => {
-		let uid = req.session.uid;
+		let { uid } = req.session;
 
 		// Query database
 		let data = await db.collection(CONST.DB.USERS).doc(uid).get();
@@ -96,15 +96,24 @@ module.exports = function(admin, db, io, validate_session, field) {
 	});
 
 	// Get matches
-	router.get('/get_matches', field('ids'), async (req, res) => {
+	router.get('/get_matches', field('ids', 'user'), async (req, res) => {
 		let ids = JSON.parse(req.field.ids);
+		let user_id = req.field.user;
 
 		// Query database
-		let uid = req.session.uid;
 		let total = Math.ceil(ids.length / 10.0);
 		let sent = 0;
 		let result = [];
 		let self = this;
+		let enemy_data = {};
+
+		if (user_id != 'none') {
+			let snap = await db.collection(CONST.DB.USERS)
+							   .where(admin.firestore.FieldPath.documentId(), '==', user_id)
+							   .select('name', 'photo')
+							   .get();
+			enemy_data = snap.docs[0].data();
+		}
 
 		for (let i = 0; i < total; i++) {
 			let ids_i = ids.slice(i * 10, i * 10 + 10);
@@ -116,28 +125,14 @@ module.exports = function(admin, db, io, validate_session, field) {
 				.then(async snapshot => {
 					await snapshot.forEach(async doc => {
 						let data = doc.data();
-						let id = (uid == data.black) ? data.white : data.black;
+						sent ++;
+						result.push([doc.id, data]);
 
-						if (id) {
-							let snap = await db.collection(CONST.DB.USERS)
-											   .where(admin.firestore.FieldPath.documentId(), '==', id)
-											   .select('name')
-											   .get();
-							let user_data = snap.docs[0].data();
-
-							result.push([doc.id, data, user_data]);
-							sent ++;
-
-							if (sent == ids.length) {
-								res.send({ data: result });
-							}
-						}
-						else {
-							sent ++;
-							result.push([doc.id, data, null]);
-							if (sent == ids.length) {
-								res.send({ data: result });
-							}
+						if (sent == ids.length) {
+							res.send({
+								enemy: enemy_data,
+								matches: result
+							});
 						}
 					});
 				});
@@ -476,8 +471,16 @@ module.exports = function(admin, db, io, validate_session, field) {
 			}
 			await db.collection(CONST.DB.MATCHES).doc(match_id).set(changes, { merge: true });
 
-			await db.collection(CONST.DB.USERS).doc(white).set({
-				matches: admin.firestore.FieldValue.arrayUnion(match_id),
+			db.collection(CONST.DB.USERS).doc(white).set({
+				matches: admin.firestore.FieldValue.arrayUnion(match_id + '-' + req.match.black),
+			}, { merge: true });
+
+			db.collection(CONST.DB.USERS).doc(req.match.black).set({
+				matches: admin.firestore.FieldValue.arrayRemove(match_id),
+			}, { merge: true });
+
+			db.collection(CONST.DB.USERS).doc(req.match.black).set({
+				matches: admin.firestore.FieldValue.arrayUnion(match_id + '-' + white),
 			}, { merge: true });
 
 			res.json('success');
