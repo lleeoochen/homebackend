@@ -11,7 +11,7 @@ module.exports = class MatchesCache {
 		this.database = database;
 
 		// Periodically clean cache
-		setInterval(function() {
+		setInterval(() => {
 			this.clean_cache();
 		},
 		Const.CACHE_EXPIRE_TIME);
