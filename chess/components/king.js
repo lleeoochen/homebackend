@@ -1,12 +1,12 @@
-const CONST = require('../const');
+var Const = require('../helper/const');
+var Util  = require('../helper/util');
 var Piece = require('./piece');
-var Util   = require('../util');
 
 
 module.exports = class King extends Piece {
 
 	constructor(team, image) {
-		super(team, CONST.CHESS.King, CONST.VALUE.King, image);
+		super(team, Const.CHESS.King, Const.VALUE.King, image);
 	}
 
 	getPossibleMoves(game, chessboard, grid) {

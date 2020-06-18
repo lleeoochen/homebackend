@@ -1,4 +1,6 @@
-module.exports = Object.freeze({
+var constants_global = require('../../helper/const');
+
+var constants = {
 	CHESS: {King: "King", Queen: "Queen", Rook: "Rook", Bishop: "Bishop", Knight: "Horse", Pawn: "Pawn", None: "None"},
 	TEAM: {B: "B", W: "W", None:"N"},
 	VALUE: {King: 200, Queen: 9, Rook: 5, Bishop: 3, Knight: 3, Pawn: 1, None: 0},
@@ -13,4 +15,6 @@ module.exports = Object.freeze({
 	FLAG_KING_CASTLE: 1,
 	FLAG_PASSANT_PAWN: 2,
 	FLAG_PAWN_TO_QUEEN: 3,
-});
+};
+
+module.exports = Object.freeze({...constants_global, ...constants});

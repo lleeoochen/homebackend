@@ -1,11 +1,10 @@
-const CONST      = require('./const');
-// var Piece        = require('./components/piece');
+var Const        = require('./helper/const');
 var PieceFactory = require('./components/piecefactory');
-var Grid   = require('./components/grid');
-var Util   = require('./util');
+var Grid         = require('./components/grid');
+var Util         = require('./helper/util');
 
 
-class ChessMatch {
+class Simulation {
 
 	constructor() {
 		this.init();
@@ -26,7 +25,7 @@ class ChessMatch {
 		this.passant_stack = [];
 		this.id = 0;
 		this.pieces = {};
-		this.turn = CONST.TEAM.W;
+		this.turn = Const.TEAM.W;
 
 		this.initBoard();
 		this.initPieces();
@@ -48,7 +47,7 @@ class ChessMatch {
 			let newGrid = this.chessboard[move.new_x][move.new_y];
 
 			let cond1 = (move.turn == this.turn);
-			let cond2 = this.turn == CONST.TEAM.B ? (match.black == player) : (match.white == player);
+			let cond2 = this.turn == Const.TEAM.B ? (match.black == player) : (match.white == player);
 			if (player == undefined) cond2 = true;
 
 			let cond3 = this.isValidMove(oldGrid, newGrid);
@@ -74,8 +73,8 @@ class ChessMatch {
 
 	//Intialize chessboard background
 	initBoard(){
-		for (let x = 0; x < CONST.BOARD_SIZE; x++) {
-			for (let y = 0; y < CONST.BOARD_SIZE; y++) {
+		for (let x = 0; x < Const.BOARD_SIZE; x++) {
+			for (let y = 0; y < Const.BOARD_SIZE; y++) {
 				//Grid instance
 				this.chessboard[x][y] = new Grid(x, y, -1, null);
 			}
@@ -92,29 +91,29 @@ class ChessMatch {
 		let king_x = 4;
 		let queen_x = 3;
 
-		this.initEachPiece(this.id++, 0, black_pos, CONST.TEAM.B, CONST.CHESS.Rook);
-		this.initEachPiece(this.id++, 7, black_pos, CONST.TEAM.B, CONST.CHESS.Rook);
-		this.initEachPiece(this.id++, 1, black_pos, CONST.TEAM.B, CONST.CHESS.Knight);
-		this.initEachPiece(this.id++, 6, black_pos, CONST.TEAM.B, CONST.CHESS.Knight);
-		this.initEachPiece(this.id++, 2, black_pos, CONST.TEAM.B, CONST.CHESS.Bishop);
-		this.initEachPiece(this.id++, 5, black_pos, CONST.TEAM.B, CONST.CHESS.Bishop);
+		this.initEachPiece(this.id++, 0, black_pos, Const.TEAM.B, Const.CHESS.Rook);
+		this.initEachPiece(this.id++, 7, black_pos, Const.TEAM.B, Const.CHESS.Rook);
+		this.initEachPiece(this.id++, 1, black_pos, Const.TEAM.B, Const.CHESS.Knight);
+		this.initEachPiece(this.id++, 6, black_pos, Const.TEAM.B, Const.CHESS.Knight);
+		this.initEachPiece(this.id++, 2, black_pos, Const.TEAM.B, Const.CHESS.Bishop);
+		this.initEachPiece(this.id++, 5, black_pos, Const.TEAM.B, Const.CHESS.Bishop);
 
-		this.initEachPiece(this.id++, queen_x, black_pos, CONST.TEAM.B, CONST.CHESS.Queen);
-		this.initEachPiece(this.id++, king_x, black_pos, CONST.TEAM.B, CONST.CHESS.King);
+		this.initEachPiece(this.id++, queen_x, black_pos, Const.TEAM.B, Const.CHESS.Queen);
+		this.initEachPiece(this.id++, king_x, black_pos, Const.TEAM.B, Const.CHESS.King);
 
-		this.initEachPiece(this.id++, 0, white_pos, CONST.TEAM.W, CONST.CHESS.Rook);
-		this.initEachPiece(this.id++, 7, white_pos, CONST.TEAM.W, CONST.CHESS.Rook);
-		this.initEachPiece(this.id++, 1, white_pos, CONST.TEAM.W, CONST.CHESS.Knight);
-		this.initEachPiece(this.id++, 6, white_pos, CONST.TEAM.W, CONST.CHESS.Knight);
-		this.initEachPiece(this.id++, 2, white_pos, CONST.TEAM.W, CONST.CHESS.Bishop);
-		this.initEachPiece(this.id++, 5, white_pos, CONST.TEAM.W, CONST.CHESS.Bishop);
+		this.initEachPiece(this.id++, 0, white_pos, Const.TEAM.W, Const.CHESS.Rook);
+		this.initEachPiece(this.id++, 7, white_pos, Const.TEAM.W, Const.CHESS.Rook);
+		this.initEachPiece(this.id++, 1, white_pos, Const.TEAM.W, Const.CHESS.Knight);
+		this.initEachPiece(this.id++, 6, white_pos, Const.TEAM.W, Const.CHESS.Knight);
+		this.initEachPiece(this.id++, 2, white_pos, Const.TEAM.W, Const.CHESS.Bishop);
+		this.initEachPiece(this.id++, 5, white_pos, Const.TEAM.W, Const.CHESS.Bishop);
 
-		this.initEachPiece(this.id++, queen_x, white_pos, CONST.TEAM.W, CONST.CHESS.Queen);
-		this.initEachPiece(this.id++, king_x, white_pos, CONST.TEAM.W, CONST.CHESS.King);
+		this.initEachPiece(this.id++, queen_x, white_pos, Const.TEAM.W, Const.CHESS.Queen);
+		this.initEachPiece(this.id++, king_x, white_pos, Const.TEAM.W, Const.CHESS.King);
 
-		for (var x = 0; x < CONST.BOARD_SIZE; x++) {
-			this.initEachPiece(this.id++, x, black_pawn_pos, CONST.TEAM.B, CONST.CHESS.Pawn);
-			this.initEachPiece(this.id++, x, white_pawn_pos, CONST.TEAM.W, CONST.CHESS.Pawn);
+		for (var x = 0; x < Const.BOARD_SIZE; x++) {
+			this.initEachPiece(this.id++, x, black_pawn_pos, Const.TEAM.B, Const.CHESS.Pawn);
+			this.initEachPiece(this.id++, x, white_pawn_pos, Const.TEAM.W, Const.CHESS.Pawn);
 		}
 	}
 
@@ -124,7 +123,7 @@ class ChessMatch {
 		this.chessboard[x][y].piece = id;
 		this.pieces[id] = PieceFactory.createPiece(team, type);
 
-		if (type == CONST.CHESS.King)
+		if (type == Const.CHESS.King)
 			this.king_grid[team] = this.chessboard[x][y];
 	}
 
@@ -153,13 +152,13 @@ class ChessMatch {
 
 		let keyPiece = keyGrid.piece;
 		keyGrid.piece = 100;
-		this.pieces[100] = PieceFactory.createPiece(team, CONST.CHESS.None, null);
+		this.pieces[100] = PieceFactory.createPiece(team, Const.CHESS.None, null);
 
 		for (let i = 0; i < board.length; i++) {
 			for (let j = 0; j < board.length; j++) {
 				let grid = board[i][j];
 				if (this.get_piece(grid) != null) {
-					let downward = this.get_piece(grid).team == CONST.TEAM.B;
+					let downward = this.get_piece(grid).team == Const.TEAM.B;
 					let validMoves = this.get_piece(grid).getPossibleMoves(this, board, grid, downward);
 					let found = false;
 
@@ -206,11 +205,11 @@ class ChessMatch {
 
 	//Update and show all possible moves based on a specific grid
 	updateMoves(grid) {
-		let downward = this.get_piece(grid).team == CONST.TEAM.B;
+		let downward = this.get_piece(grid).team == Const.TEAM.B;
 		this.moves = this.get_piece(grid).getPossibleMoves(this, this.chessboard, grid, downward);
 
-		if ((!this.white_king_moved && grid == this.king_grid[CONST.TEAM.W]) ||
-			(!this.black_king_moved && grid == this.king_grid[CONST.TEAM.B])) {
+		if ((!this.white_king_moved && grid == this.king_grid[Const.TEAM.W]) ||
+			(!this.black_king_moved && grid == this.king_grid[Const.TEAM.B])) {
 
 			//Show left castle move for king
 			if (this.canCastle(grid, this.chessboard[grid.x - 2][grid.y]))
@@ -225,7 +224,7 @@ class ChessMatch {
 		if (this.passant_pawn) {
 			if (this.get_piece(grid).team != this.get_piece(this.passant_pawn).team) {
 				if (Math.abs(grid.x - this.passant_pawn.x) == 1 && grid.y == this.passant_pawn.y) {
-					if (this.get_piece(grid).team == CONST.TEAM.W)
+					if (this.get_piece(grid).team == Const.TEAM.W)
 						this.moves.push(this.chessboard[this.passant_pawn.x][this.passant_pawn.y - 1]);
 					else
 						this.moves.push(this.chessboard[this.passant_pawn.x][this.passant_pawn.y + 1]);
@@ -270,15 +269,15 @@ class ChessMatch {
 
 		// Check piece type
 		if (this.get_piece(oldGrid) == null) return false;
-		if (this.get_piece(oldGrid).type != CONST.CHESS.King) return false;
+		if (this.get_piece(oldGrid).type != Const.CHESS.King) return false;
 
 		// Check piece location
-		if (newGrid.y != 0 && newGrid.y != CONST.BOARD_SIZE - 1) return false;
+		if (newGrid.y != 0 && newGrid.y != Const.BOARD_SIZE - 1) return false;
 		if (Math.abs(newGrid.x - oldGrid.x) != 2) return false;
 
 		// Check if king moved
-		if (team == CONST.TEAM.W && this.white_king_moved) return false;
-		if (team == CONST.TEAM.B && this.black_king_moved) return false;
+		if (team == Const.TEAM.W && this.white_king_moved) return false;
+		if (team == Const.TEAM.B && this.black_king_moved) return false;
 
 		// Check if king is targeted/safe
 		if (!this.isKingSafe(team)) return false;
@@ -288,14 +287,14 @@ class ChessMatch {
 		let leftSide = newGrid.x - oldGrid.x < 0;
 		if (leftSide) {
 			for (let x = 1; x < oldGrid.x; x++)
-				if (this.get_piece(this.chessboard[x][CONST.BOARD_SIZE - 1]))
+				if (this.get_piece(this.chessboard[x][Const.BOARD_SIZE - 1]))
 					return false;
 			return this.isKingSafe(team, this.king_grid[team], this.chessboard[this.king_grid[team].x - 1][this.king_grid[team].y])
 				&& this.isKingSafe(team, this.king_grid[team], this.chessboard[this.king_grid[team].x - 2][this.king_grid[team].y]);
 		}
 		else {
-			for (let x = oldGrid.x + 1; x < CONST.BOARD_SIZE - 1; x++)
-				if (this.get_piece(this.chessboard[x][CONST.BOARD_SIZE - 1]))
+			for (let x = oldGrid.x + 1; x < Const.BOARD_SIZE - 1; x++)
+				if (this.get_piece(this.chessboard[x][Const.BOARD_SIZE - 1]))
 					return false;
 			return this.isKingSafe(team, this.king_grid[team], this.chessboard[this.king_grid[team].x + 1][this.king_grid[team].y])
 				&& this.isKingSafe(team, this.king_grid[team], this.chessboard[this.king_grid[team].x + 2][this.king_grid[team].y]);
@@ -304,11 +303,11 @@ class ChessMatch {
 
 	//Switch active team turn
 	switchTurn() {
-		if (this.turn == CONST.TEAM.B) {
-			this.turn = CONST.TEAM.W;
+		if (this.turn == Const.TEAM.B) {
+			this.turn = Const.TEAM.W;
 		}
 		else {
-			this.turn = CONST.TEAM.B;
+			this.turn = Const.TEAM.B;
 		}
 	}
 
@@ -332,7 +331,7 @@ class ChessMatch {
 	moveChess(oldGrid, newGrid) {
 		let team = this.get_piece(oldGrid).team;
 
-		this.stackEatenPiece(oldGrid, newGrid, newGrid, newGrid.piece, false, CONST.FLAG_NONE);
+		this.stackEatenPiece(oldGrid, newGrid, newGrid, newGrid.piece, false, Const.FLAG_NONE);
 
 		//===================== Special Moves ========================
 
@@ -365,12 +364,12 @@ class ChessMatch {
 		if (this.passant_pawn) {
 
 			if (this.get_piece(oldGrid).team != this.get_piece(this.passant_pawn).team) {
-				if (this.get_piece(oldGrid).team == CONST.TEAM.B
+				if (this.get_piece(oldGrid).team == Const.TEAM.B
 					&& newGrid.x == this.passant_pawn.x
 					&& newGrid.y == this.passant_pawn.y + 1) {
 					kill_passant_pawn = true;
 				}
-				else if (this.get_piece(oldGrid).team == CONST.TEAM.W
+				else if (this.get_piece(oldGrid).team == Const.TEAM.W
 					&& newGrid.x == this.passant_pawn.x
 					&& newGrid.y == this.passant_pawn.y - 1) {
 					kill_passant_pawn = true;
@@ -380,17 +379,17 @@ class ChessMatch {
 
 		// Kill passant pawn
 		if (kill_passant_pawn && this.passant_pawn) {
-			this.stackEatenPiece(oldGrid, newGrid, this.passant_pawn, this.passant_pawn.piece, true, CONST.FLAG_PASSANT_PAWN);
+			this.stackEatenPiece(oldGrid, newGrid, this.passant_pawn, this.passant_pawn.piece, true, Const.FLAG_PASSANT_PAWN);
 			this.passant_pawn.piece = -1;
 		}
 
 		// Update passant pawns on 2 moves
 		this.passant_pawn = undefined;
-		if (this.get_piece(oldGrid).type == CONST.CHESS.Pawn) {
-			if (this.get_piece(oldGrid).team == CONST.TEAM.W && oldGrid.y - newGrid.y == 2) {
+		if (this.get_piece(oldGrid).type == Const.CHESS.Pawn) {
+			if (this.get_piece(oldGrid).team == Const.TEAM.W && oldGrid.y - newGrid.y == 2) {
 				this.passant_pawn = newGrid;
 			}
-			else if (this.get_piece(oldGrid).team == CONST.TEAM.B && newGrid.y - oldGrid.y == 2) {
+			else if (this.get_piece(oldGrid).team == Const.TEAM.B && newGrid.y - oldGrid.y == 2) {
 				this.passant_pawn = newGrid;
 			}
 		}
@@ -399,50 +398,50 @@ class ChessMatch {
 
 	moveCastleKing(oldGrid, newGrid) {
 		// If oldGrid is king
-		if (this.get_piece(oldGrid).type == CONST.CHESS.King) {
+		if (this.get_piece(oldGrid).type == Const.CHESS.King) {
 
 			// If either king hasn't move
-			if (this.get_piece(oldGrid).team == CONST.TEAM.W && !this.white_king_moved
-				|| this.get_piece(oldGrid).team == CONST.TEAM.B && !this.black_king_moved) {
+			if (this.get_piece(oldGrid).team == Const.TEAM.W && !this.white_king_moved
+				|| this.get_piece(oldGrid).team == Const.TEAM.B && !this.black_king_moved) {
 
 				// Perform right castle
 				if (newGrid.x - oldGrid.x == 2) {
-					this.chessboard[oldGrid.x + 1][oldGrid.y].piece = this.chessboard[CONST.BOARD_SIZE - 1][oldGrid.y].piece;
-					this.chessboard[CONST.BOARD_SIZE - 1][oldGrid.y].piece = -1;
-					this.stackEatenPiece(oldGrid, newGrid, newGrid, newGrid.piece, true, CONST.FLAG_KING_CASTLE);
+					this.chessboard[oldGrid.x + 1][oldGrid.y].piece = this.chessboard[Const.BOARD_SIZE - 1][oldGrid.y].piece;
+					this.chessboard[Const.BOARD_SIZE - 1][oldGrid.y].piece = -1;
+					this.stackEatenPiece(oldGrid, newGrid, newGrid, newGrid.piece, true, Const.FLAG_KING_CASTLE);
 				}
 
 				// Perform left castle
 				if (newGrid.x - oldGrid.x == -2) {
 					this.chessboard[oldGrid.x - 1][oldGrid.y].piece = this.chessboard[0][oldGrid.y].piece;
 					this.chessboard[0][oldGrid.y].piece = -1;
-					this.stackEatenPiece(oldGrid, newGrid, newGrid, newGrid.piece, true, CONST.FLAG_KING_CASTLE);
+					this.stackEatenPiece(oldGrid, newGrid, newGrid, newGrid.piece, true, Const.FLAG_KING_CASTLE);
 				}
 
 			}
 		}
 
 		//King has moved, cannot castle anymore
-		if (this.get_piece(oldGrid).team == CONST.TEAM.W && this.get_piece(oldGrid).type == CONST.CHESS.King) {
+		if (this.get_piece(oldGrid).team == Const.TEAM.W && this.get_piece(oldGrid).type == Const.CHESS.King) {
 			this.white_king_moved = true;
 		}
 
 		//Other King has moved, cannot castle anymore
-		if (this.get_piece(oldGrid).team == CONST.TEAM.B && this.get_piece(oldGrid).type == CONST.CHESS.King) {
+		if (this.get_piece(oldGrid).team == Const.TEAM.B && this.get_piece(oldGrid).type == Const.CHESS.King) {
 			this.black_king_moved = true;
 		}
 	}
 
 	movePawnToQueen(oldGrid, newGrid) {
-		if (this.get_piece(newGrid).type == CONST.CHESS.Pawn) {
-			let whitePawnArrived = this.get_piece(newGrid).team == CONST.TEAM.W && newGrid.y == 0;
-			let blackPawnArrived = this.get_piece(newGrid).team == CONST.TEAM.B && newGrid.y == CONST.BOARD_SIZE - 1;
+		if (this.get_piece(newGrid).type == Const.CHESS.Pawn) {
+			let whitePawnArrived = this.get_piece(newGrid).team == Const.TEAM.W && newGrid.y == 0;
+			let blackPawnArrived = this.get_piece(newGrid).team == Const.TEAM.B && newGrid.y == Const.BOARD_SIZE - 1;
 
 			if (whitePawnArrived || blackPawnArrived) {
 				let eatenPiece = this.moves_stack.pop().eaten_piece;
-				this.stackEatenPiece(oldGrid, newGrid, newGrid, eatenPiece, false, CONST.FLAG_PAWN_TO_QUEEN);
+				this.stackEatenPiece(oldGrid, newGrid, newGrid, eatenPiece, false, Const.FLAG_PAWN_TO_QUEEN);
 
-				this.initEachPiece(this.id++, newGrid.x, newGrid.y, this.get_piece(newGrid).team, CONST.CHESS.Queen);
+				this.initEachPiece(this.id++, newGrid.x, newGrid.y, this.get_piece(newGrid).team, Const.CHESS.Queen);
 			}
 		}
 	}
@@ -470,12 +469,12 @@ class ChessMatch {
 	toBoard(chessboard=this.chessboard) {
 		let board = [];
 
-		for (let y = 0;  y < CONST.BOARD_SIZE; y++) {
+		for (let y = 0;  y < Const.BOARD_SIZE; y++) {
 			let rows = [];
 
-			for (let x = 0;  x < CONST.BOARD_SIZE; x++) {
+			for (let x = 0;  x < Const.BOARD_SIZE; x++) {
 				let grid = chessboard[x][y];
-				let piece = this.get_piece(grid) ? this.get_piece(grid).type[0] + (this.get_piece(grid).team == CONST.TEAM.W ? 'ʷ' : 'ᵇ') : '‏‏‎ ‎ ';
+				let piece = this.get_piece(grid) ? this.get_piece(grid).type[0] + (this.get_piece(grid).team == Const.TEAM.W ? 'ʷ' : 'ᵇ') : '‏‏‎ ‎ ';
 				rows.push(piece);
 			}
 
@@ -510,4 +509,4 @@ class ChessMatch {
 }
 
 
-module.exports = ChessMatch;
+module.exports = Simulation;

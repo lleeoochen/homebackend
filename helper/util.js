@@ -1,51 +1,44 @@
 const CONST = require('./const');
-const hammer = require('./hammer');
+const Hammer = require('./hammer');
 
-function get_cookies(request) {
-	let cookies = {};
-	if (request.headers && request.headers.cookie) {
-		decodeURIComponent(request.headers.cookie).split(';').forEach(function(cookie) {
-			let parts = cookie.match(/(.*?)=(.*)$/);
-			if (parts)
-				cookies[ parts[1].trim() ] = (parts[2] || '').trim();
-		});
+module.exports = class Util {
+	static get_cookies(request) {
+		let cookies = {};
+		if (request.headers && request.headers.cookie) {
+			decodeURIComponent(request.headers.cookie).split(';').forEach(function(cookie) {
+				let parts = cookie.match(/(.*?)=(.*)$/);
+				if (parts)
+					cookies[ parts[1].trim() ] = (parts[2] || '').trim();
+			});
+		}
+		return cookies;
 	}
-	return cookies;
+
+	static get_session(req, addr) {
+		let session = Hammer.decrypt(Util.get_cookies(req).session_id);
+
+		if (session == undefined
+			|| session.uid == undefined
+			|| (req.connection && session.ip != req.connection.remoteAddress))
+			return undefined;
+		else
+			return session;
+	}
+
+	static error(req, res, message, code=CONST.HTTP.BAD_REQUEST) {
+		console.log(`Error-${code} ${ req.path }: ${message}`);
+		return res.status(code).json(message);
+	}
+
+	static session_error(req, res) {
+		return Util.error(req, res, 'invalid session.', CONST.HTTP.UNAUTHORIZED);
+	}
+
+	static field_error(req, res, field) {
+		return Util.error(req, res, `missing field ${ field }.`);
+	}
+
+	static encrypt(ip, uid) {
+		return Hammer.encrypt({ ip: ip, uid: uid });
+	}
 }
-
-function get_session(req, addr) {
-	let session = hammer.decrypt(get_cookies(req).session_id);
-
-	if (session == undefined
-		|| session.uid == undefined
-		|| (req.connection && session.ip != req.connection.remoteAddress))
-		return undefined;
-	else
-		return session;
-}
-
-function error(req, res, message, code=CONST.HTTP.BAD_REQUEST) {
-	console.log(`Error-${code} ${ req.path }: ${message}`);
-	return res.status(code).json(message);
-}
-
-function session_error(req, res) {
-	return error(req, res, 'invalid session.', CONST.HTTP.UNAUTHORIZED);
-}
-
-function field_error(req, res, field) {
-	return error(req, res, `missing field ${ field }.`);
-}
-
-function encrypt(ip, uid) {
-	return hammer.encrypt({ ip: ip, uid: uid });
-}
-
-module.exports = {
-	get_cookies,
-	get_session,
-	error,
-	session_error,
-	field_error,
-	encrypt,
-};

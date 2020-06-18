@@ -3,8 +3,8 @@ const PORT = 8000;
 
 // NodeJS modules
 require('dotenv').config();
-const CONST = require('./helper/const');
-const UTIL = require('./helper/util');
+const Const = require('./helper/const');
+const Util = require('./helper/util');
 
 const express = require('express');
 const app = express();
@@ -73,7 +73,7 @@ app.post('/login', field('auth_token'), async (req, res) => {
 
 	admin.auth().verifyIdToken(auth_token).then(async function(auth_user) {
 		// Get session id
-		let session_id = UTIL.encrypt(req.connection.remoteAddress, auth_user.uid);
+		let session_id = Util.encrypt(req.connection.remoteAddress, auth_user.uid);
 
 		// Update database
 		let changes = {
@@ -81,7 +81,7 @@ app.post('/login', field('auth_token'), async (req, res) => {
 			photo: auth_user.picture,
 			name: auth_user.name
 		};
-		await db.collection(CONST.DB.USERS).doc(auth_user.uid).set(changes, { merge: true });
+		await db.collection(Const.DB.USERS).doc(auth_user.uid).set(changes, { merge: true });
 
 		// Send session_id to client
 		res.cookie('session_id', session_id, { maxAge: 2592000000, httpOnly: true });
@@ -137,9 +137,9 @@ server.listen(PORT, function() {
 
 
 function validate_session(req, res, next) {
-	req.session = UTIL.get_session(req);
+	req.session = Util.get_session(req);
 	if (req.session == undefined)
-		return UTIL.session_error(req, res);
+		return Util.session_error(req, res);
 	next();
 }
 
@@ -152,7 +152,7 @@ function field(...keys) {
 			let val = req.query[key] || req.body[key];
 
 			if (val == undefined)
-				return UTIL.field_error(req, res, key);
+				return Util.field_error(req, res, key);
 
 			req.field[key] = val;
 		}
