@@ -287,14 +287,14 @@ class Simulation {
 		let leftSide = newGrid.x - oldGrid.x < 0;
 		if (leftSide) {
 			for (let x = 1; x < oldGrid.x; x++)
-				if (this.get_piece(this.chessboard[x][Const.BOARD_SIZE - 1]))
+				if (this.get_piece(this.chessboard[x][this.king_grid[team].y]))
 					return false;
 			return this.isKingSafe(team, this.king_grid[team], this.chessboard[this.king_grid[team].x - 1][this.king_grid[team].y])
 				&& this.isKingSafe(team, this.king_grid[team], this.chessboard[this.king_grid[team].x - 2][this.king_grid[team].y]);
 		}
 		else {
 			for (let x = oldGrid.x + 1; x < Const.BOARD_SIZE - 1; x++)
-				if (this.get_piece(this.chessboard[x][Const.BOARD_SIZE - 1]))
+				if (this.get_piece(this.chessboard[x][this.king_grid[team].y]))
 					return false;
 			return this.isKingSafe(team, this.king_grid[team], this.chessboard[this.king_grid[team].x + 1][this.king_grid[team].y])
 				&& this.isKingSafe(team, this.king_grid[team], this.chessboard[this.king_grid[team].x + 2][this.king_grid[team].y]);
