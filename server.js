@@ -15,7 +15,7 @@ const io = require('socket.io')(server);
 const body_parser = require('body-parser')
 const cors = require('cors');
 
-var origins = ["http://www.chessvibe.net"];
+var origins = ["https://www.chessvibe.net"];
 if (process.env.ALLOWED_ORIGINS)
 	origins = origins.concat(process.env.ALLOWED_ORIGINS.split(','));
 
