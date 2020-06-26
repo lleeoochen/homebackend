@@ -15,7 +15,7 @@ module.exports = class Util {
 	}
 
 	static get_session(req, addr) {
-		let session = Hammer.decrypt(Util.get_cookies(req).session_id);
+		let session = Hammer.decrypt(req.headers['authorization']);
 
 		if (session == undefined
 			|| session.uid == undefined

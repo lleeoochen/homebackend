@@ -489,8 +489,14 @@ module.exports = function(admin, db, io, validate_session, field) {
 
 	// Socket connection
 	io.use(function(socket, next) {
+		let req = {
+			headers: {
+				authorization: socket.handshake.query.token
+			}
+		};
+
 		// Check session
-		let session = Util.get_session(socket.handshake);
+		let session = Util.get_session(req);
 		if (session == undefined)
 			next(new Error('Authentication error'));
 		else

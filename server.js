@@ -49,13 +49,14 @@ const db = admin.firestore();
 // Middlewares
 app.use(body_parser.urlencoded({ extended: false }));
 app.use(body_parser.json());
-app.use(cors(cors_option));
+app.use(cors());
+// app.use(cors(cors_option));
 
-// Enable cookie
-app.use((req, res, next) => {
-	res.header("Set-Cookie", "HttpOnly;Secure;SameSite=Strict");
-	next();
-});
+// // Enable cookie
+// app.use((req, res, next) => {
+// 	res.header("Set-Cookie", "HttpOnly;Secure;SameSite=Strict");
+// 	next();
+// });
 
 // Add /chess routes
 const chess_router = require('./chess/router')(admin, db, io, validate_session, field);
@@ -84,8 +85,10 @@ app.post('/login', field('auth_token'), async (req, res) => {
 		await db.collection(Const.DB.USERS).doc(auth_user.uid).set(changes, { merge: true });
 
 		// Send session_id to client
-		res.cookie('session_id', session_id, { maxAge: 2592000000, httpOnly: true });
-		res.json('success');
+		// res.cookie('session_id', session_id, { maxAge: 2592000000, httpOnly: true });
+		res.json({
+			session_token: session_id
+		});
 	});
 });
 
