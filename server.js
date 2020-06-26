@@ -20,7 +20,7 @@ if (process.env.ALLOWED_ORIGINS)
 	origins = origins.concat(process.env.ALLOWED_ORIGINS.split(','));
 
 const cors_option = {
-	origin: origins,
+	origin: '*' || origins,
 	methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
 	preflightContinue: false,
 	optionsSuccessStatus: 204,
