@@ -19,6 +19,7 @@ module.exports = class Util {
 
 		if (session == undefined
 			|| session.uid == undefined
+			|| session.expire <= new Date().getTime()
 			|| (req.connection && session.ip != req.connection.remoteAddress))
 			return undefined;
 		else
@@ -39,6 +40,13 @@ module.exports = class Util {
 	}
 
 	static encrypt(ip, uid) {
-		return Hammer.encrypt({ ip: ip, uid: uid });
+		let expire_date = new Date();
+		expire_date.setDate(expire_date.getDate() + 30);
+
+		return Hammer.encrypt({
+			ip: ip,
+			uid: uid,
+			expire: expire_date.getTime()
+		});
 	}
 }
