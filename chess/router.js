@@ -520,7 +520,7 @@ module.exports = function(admin, db, io, validate_session, field) {
 		// Listen match
 		socket.on('listen_match', id => {
 			if (id == undefined)
-				return socket.emit('listen_user_' + id, 'Error: missing field id.');
+				return socket.emit('listen_match_' + id, 'Error: missing field id.');
 
 			database.listen_match(id, match => {
 				socket.emit('listen_match_' + id, {

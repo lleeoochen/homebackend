@@ -65,7 +65,7 @@ module.exports = class Database {
 	get_matches(ids) {
 		return this.db.collection(Const.DB.MATCHES)
 			.where(this.admin.firestore.FieldPath.documentId(), "in", ids)
-			.select('black', 'white', 'moves', 'updated')
+			.select('black', 'white', 'moves', 'theme', 'updated')
 			.get();
 	}
 
