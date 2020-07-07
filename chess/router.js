@@ -497,12 +497,28 @@ module.exports = function(admin, db, io, validate_session, field) {
 
 		// Check session
 		let session = Util.get_session(req);
-		if (session == undefined)
+		if (session == undefined) {
 			next(new Error('Authentication error'));
-		else
+		}
+		else {
+			socket.handshake.query.session = session;
 			next();
+		}
 	})
 	.on('connection', function (socket) {
+
+		// Listen profile
+		socket.on('listen_profile', () => {
+            let id = socket.handshake.query.session.uid;
+			if (id == undefined)
+                return socket.emit('listen_profile', 'Error: missing field id.');
+
+            database.listen_profile(id, user => {
+                socket.emit('listen_profile', {
+                    data: user
+                });
+            });
+        });
 
 		// Listen user
 		socket.on('listen_user', id => {

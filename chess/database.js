@@ -23,6 +23,13 @@ module.exports = class Database {
 		return snap.docs[0].data();
 	}
 
+    listen_profile(id, callback) {
+        let doc = this.db.collection(Const.DB.USERS).doc(id);
+        doc.onSnapshot(snapshot => {
+            callback(snapshot.data());
+        });
+    }
+
 	listen_user(id, callback) {
 		let doc = this.db.collection(Const.DB.USERS).doc(id);
 		doc.onSnapshot(snapshot => {
