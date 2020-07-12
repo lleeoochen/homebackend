@@ -136,14 +136,16 @@ module.exports = function(admin, db, io, validate_session, field) {
 	});
 
 	// Delete match
-	router.post('/delete_match', field('match_id'), matches_cache.load_match(), async (req, res) => {
+	router.post('/delete_match', field('match_id'), async (req, res) => {
 		let { match_id } = req.field;
+		let match = await this.database.get_match(match_id);
 
-		if (req.session.uid != req.match.black && req.session.uid != req.match.white) {
+		if (req.session.uid != match.black && req.session.uid != match.white) {
 			return res.json('User not permitted.');
 		}
 
-		let enemy = req.session.uid == req.match.black ? req.match.white : req.match.black;
+
+		let enemy = req.session.uid == match.black ? match.white : match.black;
 
 		// Create match
 		await database.delete_match(match_id);
