@@ -135,6 +135,31 @@ module.exports = function(admin, db, io, validate_session, field) {
 		res.json(ref.id);
 	});
 
+	// Delete match
+	router.post('/delete_match', field('match_id'), matches_cache.load_match(), async (req, res) => {
+		let { match_id } = req.field;
+
+		if (req.session.uid != req.match.black && req.session.uid != req.match.white) {
+			return res.json('User not permitted.');
+		}
+
+		let enemy = req.session.uid == req.match.black ? req.match.white : req.match.black;
+
+		// Create match
+		await database.delete_match(match_id);
+
+		// Update user's matches
+		await database.update_user(req.session.uid, {
+			matches: admin.firestore.FieldValue.arrayRemove(enemy + '-' + match_id)
+		});
+		await database.update_user(enemy, {
+			matches: admin.firestore.FieldValue.arrayRemove(req.session.uid + '-' + match_id)
+		});
+
+		// Respond to client
+		res.json('success');
+	});
+
 
 	// =========================================================================================
 	// ============================== MATCH UPDATE OPERATIONS ==================================

@@ -64,6 +64,10 @@ module.exports = class Database {
 		});
 	}
 
+	async delete_match(id) {
+		await this.db.collection(Const.DB.MATCHES).doc(id).delete();
+	}
+
 	async get_match(id) {
 		let data = await this.db.collection(Const.DB.MATCHES).doc(id).get();
 		return data.data();
