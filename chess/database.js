@@ -47,10 +47,10 @@ module.exports = class Database {
 
 
 
-	create_match(uid, theme, time) {
+	create_match(uid, theme, time, AI=false) {
 		return this.db.collection(Const.DB.MATCHES).add({
 			black: uid,
-			white: null,
+			white: AI ? 'AI' : null,
 			moves: [],
 			chat: [],
 			theme: theme,

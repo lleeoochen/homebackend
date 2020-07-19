@@ -119,12 +119,11 @@ module.exports = function(admin, db, io, validate_session, field) {
 	});
 
 	// Create new match
-	router.post('/create_match', field('theme', 'time'), async (req, res) => {
-		let theme = req.field.theme;
-		let time = req.field.time;
+	router.post('/create_match', field('theme', 'time', 'AI'), async (req, res) => {
+		let { theme, time, AI } = req.field;
 
 		// Create match
-		let ref = await database.create_match(req.session.uid, theme, time);
+		let ref = await database.create_match(req.session.uid, theme, time, AI);
 
 		// Update user's matches
 		await database.update_user(req.session.uid, {
