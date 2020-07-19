@@ -109,7 +109,7 @@ module.exports = function(admin, db, io, validate_session, field) {
 			}
 
 			let enemy = {};
-			if (user_id != 'none' && user_id != 'AI') enemy = await database.get_user(user_id);
+			if (user_id != 'none') enemy = await database.get_user(user_id);
 
 			res.send({
 				enemy: enemy,
@@ -127,7 +127,7 @@ module.exports = function(admin, db, io, validate_session, field) {
 
 		// Update user's matches
 		await database.update_user(req.session.uid, {
-			matches: admin.firestore.FieldValue.arrayUnion(ref.id + (AI ? 'AI-' : ''))
+			matches: admin.firestore.FieldValue.arrayUnion(ref.id + (AI ? '-AI' : ''))
 		});
 
 		// Respond to client
