@@ -137,7 +137,7 @@ module.exports = function(admin, db, io, validate_session, field) {
 	// Delete match
 	router.post('/delete_match', field('match_id'), async (req, res) => {
 		let { match_id } = req.field;
-		let match = await this.database.get_match(match_id);
+		let match = await database.get_match(match_id);
 
 		if (req.session.uid != match.black && req.session.uid != match.white) {
 			return res.json('User not permitted.');
