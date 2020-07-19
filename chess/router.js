@@ -127,7 +127,7 @@ module.exports = function(admin, db, io, validate_session, field) {
 
 		// Update user's matches
 		await database.update_user(req.session.uid, {
-			matches: admin.firestore.FieldValue.arrayUnion((AI ? 'AI-' : '') + ref.id)
+			matches: admin.firestore.FieldValue.arrayUnion(ref.id + (AI ? 'AI-' : ''))
 		});
 
 		// Respond to client
