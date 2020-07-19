@@ -48,7 +48,9 @@ class Simulation {
 
 			let cond1 = (move.turn == this.turn);
 			let cond2 = this.turn == Const.TEAM.B ? (match.black == player) : (match.white == player);
-			if (player == undefined || player == 'AI') cond2 = true;
+			if (player == undefined) cond2 = true;
+			if (player == match.black && 'AI' == match.white) cond2 = true;
+
 
 			let cond3 = this.isValidMove(oldGrid, newGrid);
 			console.log(cond1, cond2, cond3);
