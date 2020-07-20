@@ -92,8 +92,8 @@ module.exports = class Database {
 	}
 
 	async finish_match(match_id, match, move, message) {
-		if (message) match.chat.push(message);
-		if (move) match.moves.push(move);
+		if (message != null) match.chat.push(message);
+		if (move != null) match.moves.push(move);
 
 		// Update database
 		let changes = {
