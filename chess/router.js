@@ -532,6 +532,7 @@ module.exports = function(admin, db, io, validate_session, field) {
 		}
 	})
 	.on('connection', function (socket) {
+		let listeners = [];
 
 		// Listen profile
 		socket.on('listen_profile', () => {
@@ -539,11 +540,12 @@ module.exports = function(admin, db, io, validate_session, field) {
 			if (id == undefined)
 				return socket.emit('listen_profile', 'Error: missing field id.');
 
-			database.listen_profile(id, user => {
+			listeners.push(database.listen_profile(id, user => {
+				console.log("Profile updated: ", user.matches.length);
 				socket.emit('listen_profile', {
 					data: user
 				});
-			});
+			}));
 		});
 
 		// Listen user
@@ -551,12 +553,12 @@ module.exports = function(admin, db, io, validate_session, field) {
 			if (id == undefined)
 				return socket.emit('listen_user_' + id, 'Error: missing field id.');
 
-			database.listen_user(id, user => {
+			listeners.push(database.listen_user(id, user => {
 				socket.emit('listen_user_' + id, {
 					id: id,
 					data: user
 				});
-			});
+			}));
 		});
 
 		// Listen match
@@ -564,15 +566,18 @@ module.exports = function(admin, db, io, validate_session, field) {
 			if (id == undefined)
 				return socket.emit('listen_match_' + id, 'Error: missing field id.');
 
-			database.listen_match(id, match => {
+			listeners.push(database.listen_match(id, match => {
 				socket.emit('listen_match_' + id, {
 					id: id,
 					data: match
 				})
-			});
+			}));
 		});
 
 		socket.on('disconnect', () => {
+			for (let listener of listeners) {
+				listener(); // disconnect firebase listener
+			}
 		});
 	});
 

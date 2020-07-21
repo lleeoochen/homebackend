@@ -25,14 +25,14 @@ module.exports = class Database {
 
 	listen_profile(id, callback) {
 		let doc = this.db.collection(Const.DB.USERS).doc(id);
-		doc.onSnapshot(snapshot => {
+		return doc.onSnapshot(snapshot => {
 			callback(snapshot.data());
 		});
 	}
 
 	listen_user(id, callback) {
 		let doc = this.db.collection(Const.DB.USERS).doc(id);
-		doc.onSnapshot(snapshot => {
+		return doc.onSnapshot(snapshot => {
 			callback({
 				name: snapshot.data().name,
 				photo: snapshot.data().photo
@@ -82,7 +82,7 @@ module.exports = class Database {
 
 	listen_match(id, callback) {
 		let doc = this.db.collection(Const.DB.MATCHES).doc(id);
-		doc.onSnapshot(snapshot => {
+		return doc.onSnapshot(snapshot => {
 			callback(snapshot.data());
 		});
 	}
