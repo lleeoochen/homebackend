@@ -53,6 +53,24 @@ module.exports = function(admin, db, io, validate_session, field) {
 		res.json('success');
 	});
 
+    // Request friend
+    router.post('/request_friend', field('user_id'), async (req, res) => {
+        let { uid } = req.session;
+        let { user_id } = req.field;
+
+        await database.request_friend(uid, user_id);
+        res.json('success');
+    });
+
+    // Accept friend request
+    router.post('/accept_friend', field('user_id'), async (req, res) => {
+        let { uid } = req.session;
+        let { user_id } = req.field;
+
+        await database.accept_friend(uid, user_id);
+        res.json('success');
+    });
+
 	// Get cache
 	router.get('/get_cache', async (req, res) => {
 		return res.json(matches_cache);
@@ -109,7 +127,12 @@ module.exports = function(admin, db, io, validate_session, field) {
 			}
 
 			let enemy = {};
-			if (user_id != 'none') enemy = await database.get_user(user_id);
+			if (user_id != 'none') {
+				enemy = {
+					...await database.get_user(user_id),
+					user_id,
+				}
+			}
 
 			res.send({
 				enemy: enemy,

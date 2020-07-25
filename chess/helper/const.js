@@ -15,6 +15,12 @@ var constants = {
 	FLAG_KING_CASTLE: 1,
 	FLAG_PASSANT_PAWN: 2,
 	FLAG_PAWN_TO_QUEEN: 3,
+
+	FRIEND: {
+		REQUEST_SENT: 1,
+		REQUEST_RECEIVED: 2,
+		FRIENDED: 3,
+	},
 };
 
 module.exports = Object.freeze({...constants_global, ...constants});

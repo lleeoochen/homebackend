@@ -44,8 +44,33 @@ module.exports = class Database {
 		await this.db.collection(Const.DB.USERS).doc(user_id).set(changes, { merge: true });
 	}
 
+    async request_friend(user_id, friend_id) {
+		await this.db.collection(Const.DB.USERS).doc(user_id).set({
+			friends: {
+				[friend_id]: Const.FRIEND.REQUEST_SENT,	
+			},
+		}, { merge: true });
 
+		await this.db.collection(Const.DB.USERS).doc(friend_id).set({
+            friends: {
+                [user_id]: Const.FRIEND.REQUEST_RECEIVED,
+            },
+        }, { merge: true });
+    }
 
+    async accept_friend(user_id, friend_id) {
+        await this.db.collection(Const.DB.USERS).doc(user_id).set({
+            friends: {
+                [friend_id]: Const.FRIEND.FRIENDED,
+            },
+        }, { merge: true });
+
+        await this.db.collection(Const.DB.USERS).doc(friend_id).set({
+            friends: {
+                [user_id]: Const.FRIEND.FRIENDED,
+            },
+        }, { merge: true });
+    }
 
 	create_match(uid, theme, time, AI=false) {
 		return this.db.collection(Const.DB.MATCHES).add({
