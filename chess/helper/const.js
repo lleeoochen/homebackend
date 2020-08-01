@@ -27,7 +27,7 @@ var constants = {
 		FRIEND_REQUEST: 2,
 		FRIEND_ACCEPTED: 3,
 		CHALLENGE: 4,
-	),
+	},
 };
 
 module.exports = Object.freeze({...constants_global, ...constants});

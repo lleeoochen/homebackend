@@ -90,13 +90,14 @@ module.exports = function(admin, db, io, validate_session, field) {
 	router.get('/get_notification_list', field('ids'), async (req, res) => {
 		let ids = JSON.parse(req.field.ids);
 
+		console.log(ids);
 		let promises = ids.map(id => database.get_notification(id));
 
 		let data = [];
-		Promise.all(promises).then(results => {
-			for (let result of results)
-				data.push(result.data());
-		});
+		let results = await Promise.all(promises);
+
+		for (let result of results)
+			data.push(result.data());
 
 		res.send({ data });
 	});
