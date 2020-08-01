@@ -44,7 +44,7 @@ module.exports = class Database {
 		await this.db.collection(Const.DB.USERS).doc(user_id).set(changes, { merge: true });
 	}
 
-    async request_friend(user_id, friend_id) {
+	async request_friend(user_id, friend_id) {
 		await this.db.collection(Const.DB.USERS).doc(user_id).set({
 			friends: {
 				[friend_id]: Const.FRIEND.REQUEST_SENT,	
@@ -52,25 +52,25 @@ module.exports = class Database {
 		}, { merge: true });
 
 		await this.db.collection(Const.DB.USERS).doc(friend_id).set({
-            friends: {
-                [user_id]: Const.FRIEND.REQUEST_RECEIVED,
-            },
-        }, { merge: true });
-    }
+			friends: {
+				[user_id]: Const.FRIEND.REQUEST_RECEIVED,
+			},
+		}, { merge: true });
+	}
 
-    async accept_friend(user_id, friend_id) {
-        await this.db.collection(Const.DB.USERS).doc(user_id).set({
-            friends: {
-                [friend_id]: Const.FRIEND.FRIENDED,
-            },
-        }, { merge: true });
+	async accept_friend(user_id, friend_id) {
+		await this.db.collection(Const.DB.USERS).doc(user_id).set({
+			friends: {
+				[friend_id]: Const.FRIEND.FRIENDED,
+			},
+		}, { merge: true });
 
-        await this.db.collection(Const.DB.USERS).doc(friend_id).set({
-            friends: {
-                [user_id]: Const.FRIEND.FRIENDED,
-            },
-        }, { merge: true });
-    }
+		await this.db.collection(Const.DB.USERS).doc(friend_id).set({
+			friends: {
+				[user_id]: Const.FRIEND.FRIENDED,
+			},
+		}, { merge: true });
+	}
 
 	create_match(uid, theme, time, AI=false) {
 		return this.db.collection(Const.DB.MATCHES).add({
@@ -127,5 +127,14 @@ module.exports = class Database {
 			updated: new Date().getTime()
 		};
 		await this.db.collection(Const.DB.MATCHES).doc(match_id).set(changes, { merge: true });
+	}
+
+	async notify(id, user, type, uid, payload) {
+		let notifications = user.notifications || [];
+		notifications.push({ type, uid, payload });
+
+		await this.db.collection(Const.DB.USERS).doc(id).set({
+			notifications
+		}, { merge: true });
 	}
 }

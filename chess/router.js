@@ -53,23 +53,33 @@ module.exports = function(admin, db, io, validate_session, field) {
 		res.json('success');
 	});
 
-    // Request friend
-    router.post('/request_friend', field('user_id'), async (req, res) => {
-        let { uid } = req.session;
-        let { user_id } = req.field;
+	// Request friend
+	router.post('/request_friend', field('user_id'), async (req, res) => {
+		let { uid } = req.session;
+		let { user_id } = req.field;
 
-        await database.request_friend(uid, user_id);
-        res.json('success');
-    });
+		await database.request_friend(uid, user_id);
 
-    // Accept friend request
-    router.post('/accept_friend', field('user_id'), async (req, res) => {
-        let { uid } = req.session;
-        let { user_id } = req.field;
+		// Notifiy user
+		let user = await database.get_user(user_id);
+		database.notify(user_id, user, Const.NOTIFICATION_TYPE.FRIEND_REQUEST, uid, null);
 
-        await database.accept_friend(uid, user_id);
-        res.json('success');
-    });
+		res.json('success');
+	});
+
+	// Accept friend request
+	router.post('/accept_friend', field('user_id'), async (req, res) => {
+		let { uid } = req.session;
+		let { user_id } = req.field;
+
+		await database.accept_friend(uid, user_id);
+
+		// Notifiy user
+		let user = await database.get_user(user_id);
+		database.notify(user_id, user, Const.NOTIFICATION_TYPE.FRIEND_ACCEPTED, uid, null);
+
+		res.json('success');
+	});
 
 	// Get cache
 	router.get('/get_cache', async (req, res) => {
