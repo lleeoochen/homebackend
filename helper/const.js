@@ -1,7 +1,8 @@
 module.exports = Object.freeze({
 	DB: {
-		MATCHES: "chess_matches",
-		USERS:   "chess_users",
+		MATCHES:       "chess_matches",
+		USERS:         "chess_users",
+		NOTIFICATIONS: "chess_notifications",
 	},
 
 	ENDING: {

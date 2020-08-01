@@ -129,12 +129,11 @@ module.exports = class Database {
 		await this.db.collection(Const.DB.MATCHES).doc(match_id).set(changes, { merge: true });
 	}
 
-	async notify(id, user, type, uid, payload) {
-		let notifications = user.notifications || [];
-		notifications.push({ type, uid, payload });
-
-		await this.db.collection(Const.DB.USERS).doc(id).set({
-			notifications
-		}, { merge: true });
+	async create_notification(type, uid, payload) {
+		return this.db.collection(Const.DB.NOTIFICATIONS).add({
+			type,
+			uid,
+			payload
+		});
 	}
 }

@@ -61,8 +61,11 @@ module.exports = function(admin, db, io, validate_session, field) {
 		await database.request_friend(uid, user_id);
 
 		// Notifiy user
-		let user = await database.get_user(user_id);
-		database.notify(user_id, user, Const.NOTIFICATION_TYPE.FRIEND_REQUEST, uid, null);
+		let ref = await database.create_notification(Const.NOTIFICATION_TYPE.FRIEND_REQUEST, uid, null);
+
+		database.update_user(user_id, {
+			notifications: admin.firestore.FieldValue.arrayUnion(ref.id)
+		});
 
 		res.json('success');
 	});
@@ -75,8 +78,11 @@ module.exports = function(admin, db, io, validate_session, field) {
 		await database.accept_friend(uid, user_id);
 
 		// Notifiy user
-		let user = await database.get_user(user_id);
-		database.notify(user_id, user, Const.NOTIFICATION_TYPE.FRIEND_ACCEPTED, uid, null);
+		let ref = await database.create_notification(Const.NOTIFICATION_TYPE.FRIEND_ACCEPTED, uid, null);
+
+		database.update_user(user_id, {
+			notifications: admin.firestore.FieldValue.arrayUnion(ref.id)
+		});
 
 		res.json('success');
 	});
