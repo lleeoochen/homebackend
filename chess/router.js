@@ -87,6 +87,20 @@ module.exports = function(admin, db, io, validate_session, field) {
 		res.json('success');
 	});
 
+	router.get('/get_notification_list', field('ids'), async (req, res) => {
+		let ids = JSON.parse(req.field.ids);
+
+		let promises = ids.map(id => database.get_notification(id));
+
+		let data = [];
+		Promise.all(promises).then(results => {
+			for (let result of results)
+				data.push(result.data());
+		});
+
+		res.send({ data });
+	});
+
 	// Get cache
 	router.get('/get_cache', async (req, res) => {
 		return res.json(matches_cache);

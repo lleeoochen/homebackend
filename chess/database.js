@@ -129,6 +129,10 @@ module.exports = class Database {
 		await this.db.collection(Const.DB.MATCHES).doc(match_id).set(changes, { merge: true });
 	}
 
+	get_notification(id) {
+		return this.db.collection(Const.DB.NOTIFICATIONS).doc(id).get();
+	}
+
 	async create_notification(type, uid, payload) {
 		return this.db.collection(Const.DB.NOTIFICATIONS).add({
 			type,
