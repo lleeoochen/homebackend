@@ -102,6 +102,25 @@ module.exports = function(admin, db, io, validate_session, field) {
 		res.send({ data });
 	});
 
+	router.post('/send_inbox', field('email', 'message'), (req, res) => {
+		let { email, message } = req.field;
+
+		database.send_inbox(email, message);
+		res.json('success');
+	});
+
+    router.post('/get_inbox', async (req, res) => {
+		if (req.session.uid != 'wmwLsQrOCmOjCVeVnJQYnEV3qUf1') {
+			return Util.error(req, res, 'Access Denied', Const.HTTP.UNAUTHORIZED);
+		}
+
+        let data = await database.get_inbox();
+        res.send({
+            id: id,
+            data: data, 
+        });
+	});
+
 	// Get cache
 	router.get('/get_cache', async (req, res) => {
 		return res.json(matches_cache);

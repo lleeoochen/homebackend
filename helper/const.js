@@ -3,6 +3,7 @@ module.exports = Object.freeze({
 		MATCHES:       "chess_matches",
 		USERS:         "chess_users",
 		NOTIFICATIONS: "chess_notifications",
+		INBOX:         "chess_inbox",
 	},
 
 	ENDING: {

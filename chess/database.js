@@ -23,6 +23,11 @@ module.exports = class Database {
 		return snap.docs[0].data();
 	}
 
+	async get_inbox() {
+        let snap = await this.db.collection(Const.DB.INBOX).get();
+        return snap.doc;
+    }
+
 	listen_profile(id, callback) {
 		let doc = this.db.collection(Const.DB.USERS).doc(id);
 		return doc.onSnapshot(snapshot => {
@@ -70,6 +75,10 @@ module.exports = class Database {
 				[user_id]: Const.FRIEND.FRIENDED,
 			},
 		}, { merge: true });
+	}
+
+	send_inbox(email, message) {
+		this.db.collection(Const.DB.INBOX).add({ email, message });
 	}
 
 	create_match(uid, theme, time, AI=false) {
