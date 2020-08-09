@@ -24,15 +24,15 @@ module.exports = class Database {
 	}
 
 	async get_inbox() {
-        let snap = await this.db.collection(Const.DB.INBOX).get();
+		let snap = await this.db.collection(Const.DB.INBOX).get();
 		
-		let data =snap.map(doc => {
-            return doc.data();
-        });
+		let data = [];
+		snap.forEach(doc => {
+			data.push(doc.data());
+		});
 
-		console.log(data);
 		return data;
-    }
+	}
 
 	listen_profile(id, callback) {
 		let doc = this.db.collection(Const.DB.USERS).doc(id);

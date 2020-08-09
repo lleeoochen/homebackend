@@ -109,15 +109,15 @@ module.exports = function(admin, db, io, validate_session, field) {
 		res.json('success');
 	});
 
-    router.get('/get_inbox', async (req, res) => {
+	router.get('/get_inbox', async (req, res) => {
 		if (req.session.uid != 'wmwLsQrOCmOjCVeVnJQYnEV3qUf1') {
 			return Util.error(req, res, 'Access Denied', Const.HTTP.UNAUTHORIZED);
 		}
 
-        let data = await database.get_inbox();
-        res.send({
-            data: data, 
-        });
+		let data = await database.get_inbox();
+		res.send({
+			data: data, 
+		});
 	});
 
 	// Get cache
