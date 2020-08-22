@@ -613,7 +613,6 @@ module.exports = function(admin, db, io, validate_session, field) {
 				return socket.emit('listen_profile', 'Error: missing field id.');
 
 			listeners.push(database.listen_profile(id, user => {
-				console.log("Profile updated: ", user.matches.length);
 				socket.emit('listen_profile', {
 					data: user
 				});
