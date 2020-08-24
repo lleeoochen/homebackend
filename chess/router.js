@@ -191,8 +191,9 @@ module.exports = function(admin, db, io, validate_session, field) {
 	});
 
 	// Create new match
-	router.post('/create_match', field('theme', 'time', 'AI'), async (req, res) => {
-		let { theme, time, AI } = req.field;
+	router.post('/create_match', field('theme', 'time', 'friend', 'AI'), async (req, res) => {
+		let { theme, time, friend, AI } = req.field;
+		let { uid } = req.session;
 
 		// Create match
 		let ref = await database.create_match(req.session.uid, theme, time, AI);
@@ -201,6 +202,13 @@ module.exports = function(admin, db, io, validate_session, field) {
 		await database.update_user(req.session.uid, {
 			matches: admin.firestore.FieldValue.arrayUnion(ref.id + (AI ? '-AI' : ''))
 		});
+
+		// Notify friend
+		let notifRef = await database.create_notification(Const.NOTIFICATION_TYPE.CHALLENGE, uid, ref.id);
+
+		database.update_user(friend, {
+            notifications: admin.firestore.FieldValue.arrayUnion(notifRef.id)
+        });
 
 		// Respond to client
 		res.json(ref.id);
