@@ -692,15 +692,21 @@ module.exports = function(admin, db, io, validate_session, field) {
 
 	async function push_notify(sender_id, receiver_id, type, message) {
 		let sender = await database.get_user(sender_id);
-		let receiver = await database.get_user(receiver_id);
+		let receiver = await database.get_profile(receiver_id);
 
 		await admin.messaging().sendToDevice(
 			receiver.apns_tokens,
 			{
+			    notification: {
+			        title: 'New Activity',
+			        body: sender.name + message,
+			    	badge: "1",
+					sound: "default"
+				},
 				data: {
 					sender: sender_id,
 					message: sender.name + message,
-					type: type,
+					type: JSON.stringify(type),
 				},
 			},
 			{
