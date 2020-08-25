@@ -67,6 +67,8 @@ module.exports = function(admin, db, io, validate_session, field) {
 			notifications: admin.firestore.FieldValue.arrayUnion(ref.id)
 		});
 
+		await push_notify(uid, user_id, Const.NOTIFICATION_TYPE.FRIEND_REQUEST, ' sent you a friend request.');
+
 		res.json('success');
 	});
 
@@ -83,6 +85,8 @@ module.exports = function(admin, db, io, validate_session, field) {
 		database.update_user(user_id, {
 			notifications: admin.firestore.FieldValue.arrayUnion(ref.id)
 		});
+
+		await push_notify(uid, user_id, Const.NOTIFICATION_TYPE.FRIEND_ACCEPTED, ' accepted your friend request.');
 
 		res.json('success');
 	});
@@ -216,6 +220,8 @@ module.exports = function(admin, db, io, validate_session, field) {
 		database.update_user(friend, {
             notifications: admin.firestore.FieldValue.arrayUnion(notifRef.id)
         });
+
+		await push_notify(uid, friend, Const.NOTIFICATION_TYPE.CHALLENGE, ' challenged you to a chess match.');
 
 		// Respond to client
 		res.json(ref.id);
@@ -682,6 +688,28 @@ module.exports = function(admin, db, io, validate_session, field) {
 		}
 		await database.update_match(match_id, changes);
 		return true;
+	}
+
+	async function push_notify(sender_id, receiver_id, type, message) {
+		let sender = await database.get_user(sender_id);
+		let receiver = await database.get_user(receiver_id);
+
+		await admin.messaging().sendToDevice(
+			receiver.apns_tokens,
+			{
+				data: {
+					sender: sender_id,
+					message: message,
+					type: type,
+				},
+			},
+			{
+				// Required for background/quit data-only messages on iOS
+				contentAvailable: true,
+				// Required for background/quit data-only messages on Android
+				priority: 'high',
+			},
+		);
 	}
 
 	return router;
