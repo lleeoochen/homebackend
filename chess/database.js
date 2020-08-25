@@ -155,4 +155,10 @@ module.exports = class Database {
 			payload
 		});
 	}
+
+	upload_apns_token(uid, token) {
+		this.update_user(uid, {
+			apns_tokens: this.admin.firestore.FieldValue.arrayUnion(token),
+		});
+	}
 }

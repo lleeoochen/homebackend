@@ -90,7 +90,6 @@ module.exports = function(admin, db, io, validate_session, field) {
 	router.get('/get_notification_list', field('ids'), async (req, res) => {
 		let ids = JSON.parse(req.field.ids);
 
-		console.log(ids);
 		let promises = ids.map(id => database.get_notification(id));
 
 		let data = [];
@@ -118,6 +117,14 @@ module.exports = function(admin, db, io, validate_session, field) {
 		res.send({
 			data: data, 
 		});
+	});
+
+	router.post('/upload_apns_token', field('token'), async (req, res) => {
+		let { uid } = req.session;
+		let { token } = req.field;
+
+		database.upload_apns_token(uid, token);
+		res.json('success');
 	});
 
 	// Get cache
