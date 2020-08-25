@@ -699,7 +699,7 @@ module.exports = function(admin, db, io, validate_session, field) {
 			{
 				data: {
 					sender: sender_id,
-					message: message,
+					message: sender.name + message,
 					type: type,
 				},
 			},
