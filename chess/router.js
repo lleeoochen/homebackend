@@ -698,7 +698,7 @@ module.exports = function(admin, db, io, validate_session, field) {
 			receiver.apns_tokens,
 			{
 			    notification: {
-			        title: 'New Activity',
+			        title: 'ChessVibe - New Activity',
 			        body: sender.name + message,
 			    	badge: "1",
 					sound: "default"
