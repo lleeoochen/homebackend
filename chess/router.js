@@ -218,8 +218,8 @@ module.exports = function(admin, db, io, validate_session, field) {
 		let notifRef = await database.create_notification(Const.NOTIFICATION_TYPE.CHALLENGE, uid, ref.id);
 
 		database.update_user(friend, {
-            notifications: admin.firestore.FieldValue.arrayUnion(notifRef.id)
-        });
+			notifications: admin.firestore.FieldValue.arrayUnion(notifRef.id)
+		});
 
 		await push_notify(uid, friend, Const.NOTIFICATION_TYPE.CHALLENGE, ' challenged you to a chess match.');
 
