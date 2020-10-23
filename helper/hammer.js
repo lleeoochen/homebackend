@@ -1,8 +1,24 @@
+const fs = require('fs');
+const secretKeyFile = 'secret/key';
+const secretIvFile = 'secret/iv';
+
 // Credit: https://codeforgeek.com/encrypt-and-decrypt-data-in-node-js/
 const crypto = require('crypto');
 const algorithm = 'aes-256-cbc';
-const key = crypto.randomBytes(32);
-const iv = crypto.randomBytes(16);
+var key = crypto.randomBytes(32);
+var iv = crypto.randomBytes(16);
+
+fs.readFile(secretKeyFile, (err, data) => {
+	if (data) key = data;
+});
+
+fs.readFile(secretIvFile, (err, data) => {
+	if (data) iv = data;
+});
+
+fs.writeFile(secretKeyFile, key, () => {});
+fs.writeFile(secretIvFile, iv, () => {});
+
 
 // Encrypt a text
 module.exports.encrypt = function(text) {
