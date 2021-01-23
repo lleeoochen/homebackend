@@ -2,7 +2,7 @@
 
 sudo apt install nginx
 sudo add-apt-repository ppa:certbot/certbot
-sudo apt install python-certbot-nginx
+sudo apt install python3-certbot-nginx
 
 # Configure Nginx
 mkdir -p /etc/nginx/sites-available/
@@ -12,6 +12,10 @@ sudo ln -s /etc/nginx/sites-available/homebackend /etc/nginx/sites-enabled/
 
 # Configure backend service
 sudo cp configs/system.service /etc/systemd/system/homebackend.service
+
+# Install certbot config manually
+wget https://raw.githubusercontent.com/certbot/certbot/master/certbot-nginx/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf
+mv options-ssl-nginx.conf /etc/letsencrypt/
 
 # Restart system services
 sudo systemctl daemon-reload
@@ -27,5 +31,5 @@ sudo ufw allow 8000
 
 
 # Sign https certificate
-sudo certbot --nginx -d api.weitungchen.com -d api.weitungchen.com
+sudo certbot --nginx -d api.chessvibe.net -d api.chessvibe.net
 
