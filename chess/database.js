@@ -20,7 +20,10 @@ module.exports = class Database {
 						   .where(this.admin.firestore.FieldPath.documentId(), '==', user_id)
 						   .select('name', 'photo')
 						   .get();
-		return snap.docs[0].data();
+		return {
+			user_id,
+			...snap.docs[0].data(),
+		};
 	}
 
 	async get_inbox() {
@@ -97,6 +100,7 @@ module.exports = class Database {
 			updated: new Date().getTime(),
 			black_timer: time || Const.MAX_TIME,
 			white_timer: time || Const.MAX_TIME,
+			max_timer: time || Const.MAX_TIME,
 			black_undo: Const.REQUEST.NONE,
 			white_undo: Const.REQUEST.NONE,
 			black_draw: Const.REQUEST.NONE,
